@@ -15,7 +15,7 @@ let filteredItems = [];
           title: 'Dashboard',
           type: 'item',
           icon: 'feather icon-home',
-          url: '/app/dashboard/default'
+          url: '/dashboard'
         },
         {
           id: 'production-orders',
