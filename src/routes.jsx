@@ -138,7 +138,7 @@ const routes = [
       {
         path: '*',
         exact: 'true',
-        element: () => <Navigate to={BASE_URL} />
+        element: () => <Navigate to="/dashboard" replace />
       }
     ]
   }

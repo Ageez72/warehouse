@@ -54,7 +54,7 @@ const LoadingCheckpoint = () => {
               </div>
               <QrScanner onScanSuccess={handleScan} />
               {scannedCode && (
-                <Alert variant="success" className="mt-3">
+                <Alert variant="success" className="mt-3 text-center">
                   ✅ Verified: {scannedCode}
                 </Alert>
               )}
