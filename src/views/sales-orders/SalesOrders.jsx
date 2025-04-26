@@ -93,8 +93,8 @@ const SalesOrders = () => {
               <Col md={6}>
                 <Card>
                   <Card.Body className='p-3 pb-0'>
-                    <Form.Group className="mb-3" controlId="exampleForm.roleID">
-                      <h5>Customer Information</h5>
+                    <h5>Customer Information</h5>
+                    <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
                       <Form.Label>Select Customer</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -109,8 +109,8 @@ const SalesOrders = () => {
 
                 <Card>
                   <Card.Body className='p-3'>
-                    <Form.Group className="mb-3" controlId="exampleForm.roleID">
-                      <h5>Add Products</h5>
+                    <h5>Add Products</h5>
+                    <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
                       <Form.Label>Product Name</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -122,7 +122,7 @@ const SalesOrders = () => {
                     </Form.Group>
                     <Row>
                       <Col md={6}>
-                        <Form.Group className="mb-3" controlId="exampleForm.roleID">
+                        <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
                           <Form.Label>Size</Form.Label>
                           <Form.Control as="select">
                             <option>1</option>
@@ -134,7 +134,7 @@ const SalesOrders = () => {
                         </Form.Group>
                       </Col>
                       <Col md={6}>
-                        <Form.Group className="mb-3" controlId="exampleForm.roleID">
+                        <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
                           <Form.Label>Color</Form.Label>
                           <Form.Control as="select">
                             <option>1</option>

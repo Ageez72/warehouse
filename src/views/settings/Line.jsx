@@ -72,7 +72,7 @@ const Line = () => {
                   <Form.Label>Line Name</Form.Label>
                   <Form.Control type="text" placeholder="Enter username" disabled={edit} />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="exampleForm.roleID">
+                <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
                   <Form.Label>Warehouse ID</Form.Label>
                   <Form.Control as="select">
                     <option>1</option>

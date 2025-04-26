@@ -523,3 +523,34 @@ td {
     }
   }
 }
+
+.select-group {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 68%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    background-image: url('assets/images/chevron-down.svg');
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+}
+
+.btn-primary {
+  background-color: #2563EB;
+  border-color: #2563EB;
+
+  &:hover {
+    background-color: #1D4ED8;
+    border-color: #1D4ED8;
+  }
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  background-color: #1D4ED8;
+}

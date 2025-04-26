@@ -14,7 +14,7 @@ const ShippingOrders = () => {
               <Form className="dock-form">
                 <Row className='align-items-end'>
                   <Col md={3}>
-                    <Form.Group className="mb-3" controlId="salesOrder">
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -26,7 +26,7 @@ const ShippingOrders = () => {
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group className="mb-3" controlId="salesOrder">
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -138,7 +138,7 @@ const ShippingOrders = () => {
               <Form className="dock-form">
                 <Row className='align-items-end'>
                   <Col md={3}>
-                    <Form.Group className="mb-3" controlId="salesOrder">
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -150,7 +150,7 @@ const ShippingOrders = () => {
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group className="mb-3" controlId="salesOrder">
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -262,7 +262,7 @@ const ShippingOrders = () => {
               <Form className="dock-form">
                 <Row className='align-items-end'>
                   <Col md={3}>
-                    <Form.Group className="mb-3" controlId="salesOrder">
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -274,7 +274,7 @@ const ShippingOrders = () => {
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group className="mb-3" controlId="salesOrder">
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -386,7 +386,7 @@ const ShippingOrders = () => {
               <Form className="dock-form">
                 <Row className='align-items-end'>
                   <Col md={3}>
-                    <Form.Group className="mb-3" controlId="salesOrder">
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>
@@ -398,7 +398,7 @@ const ShippingOrders = () => {
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group className="mb-3" controlId="salesOrder">
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
                       <Form.Control as="select">
                         <option>1</option>

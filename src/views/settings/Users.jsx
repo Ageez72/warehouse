@@ -90,7 +90,7 @@ const Users = () => {
                   <Form.Label>Password</Form.Label>
                   <Form.Control type="password" placeholder="Password" />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="exampleForm.roleID">
+                <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
                   <Form.Label>Role ID</Form.Label>
                   <Form.Control as="select">
                     <option>1</option>

@@ -28,7 +28,7 @@ const productionOrders = () => {
             <Card.Body className='p-3'>
               <Form>
                 <h5>New Production Order</h5>
-                <Form.Group className="mb-3" controlId="salesOrder">
+                <Form.Group className="select-group mb-3" controlId="salesOrder">
                   <Form.Label>Sales Order</Form.Label>
                   <Form.Control as="select" disabled={edit}>
                     <option>1</option>
@@ -38,7 +38,7 @@ const productionOrders = () => {
                     <option>5</option>
                   </Form.Control>
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="product">
+                <Form.Group className="select-group mb-3" controlId="product">
                   <Form.Label>Product</Form.Label>
                   <Form.Control as="select" disabled={edit}>
                     <option>1</option>
@@ -50,7 +50,7 @@ const productionOrders = () => {
                 </Form.Group>
                 <Row>
                   <Col md={6}>
-                    <Form.Group className="mb-3" controlId="size">
+                    <Form.Group className="select-group mb-3" controlId="size">
                       <Form.Label>Size</Form.Label>
                       <Form.Control as="select" disabled={edit}>
                         <option>1</option>
@@ -70,7 +70,7 @@ const productionOrders = () => {
                   </Col>
                 </Row>
 
-                <Form.Group className="mb-3" controlId="warehouse">
+                <Form.Group className="select-group mb-3" controlId="warehouse">
                   <Form.Label>Warehouse</Form.Label>
                   <Form.Control as="select" disabled={edit}>
                     <option>1</option>
@@ -80,7 +80,7 @@ const productionOrders = () => {
                     <option>5</option>
                   </Form.Control>
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="productionLine">
+                <Form.Group className="select-group mb-3" controlId="productionLine">
                   <Form.Label>Production Line</Form.Label>
                   <Form.Control as="select" disabled={edit}>
                     <option>1</option>
@@ -90,7 +90,7 @@ const productionOrders = () => {
                     <option>5</option>
                   </Form.Control>
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="Priority">
+                <Form.Group className="select-group mb-3" controlId="Priority">
                   <Form.Label>Priority</Form.Label>
                   <Form.Control as="select" disabled={edit}>
                     <option>1</option>
@@ -100,7 +100,7 @@ const productionOrders = () => {
                     <option>5</option>
                   </Form.Control>
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="status">
+                <Form.Group className="select-group mb-3" controlId="status">
                   <Form.Label>Status</Form.Label>
                   <Form.Control as="select">
                     <option>1</option>

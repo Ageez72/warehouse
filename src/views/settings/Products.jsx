@@ -124,7 +124,7 @@ const Products = () => {
                 <Col md={12} key={index}>
                   <Row className='align-items-center'>
                     <Col md={5}>
-                      <Form.Group className="mb-3">
+                      <Form.Group className="select-group mb-3">
                         <Form.Label>Warehouse ID</Form.Label>
                         <Form.Control
                           as="select"
@@ -141,7 +141,7 @@ const Products = () => {
                       </Form.Group>
                     </Col>
                     <Col md={5}>
-                      <Form.Group className="mb-3">
+                      <Form.Group className="select-group mb-3">
                         <Form.Label>Line ID</Form.Label>
                         <Form.Control
                           as="select"
@@ -163,8 +163,6 @@ const Products = () => {
                   </Row>
                 </Col>
               ))}
-
-
             </Row>
           </Form>
         </Modal.Body>
