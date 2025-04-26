@@ -68,7 +68,7 @@ const routes = [
       {
         exact: 'true',
         path: '/shipping-orders',
-        element: lazy(() => import('./views/shippingOrders/ShippingOrders'))
+        element: lazy(() => import('./views/ShippingOrders/ShippingOrders'))
       },
       {
         exact: 'true',
