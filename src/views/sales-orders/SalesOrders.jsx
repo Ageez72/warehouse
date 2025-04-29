@@ -23,9 +23,7 @@ const SalesOrders = () => {
     }
   };
   const getSalesOrders = async (i) => {
-    try {    
-      console.log(page);
-        
+    try {            
       const res = await axios.get(`${BASE_URL}orders?page=${i ? i : page}&limit=${limit}`, config);
       setSalesOrdersList(res.data.data.data);
       setTotal(res.data.data.meta.total);

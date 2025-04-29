@@ -1,25 +1,218 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Table, Tabs, Tab, Form, Button, Modal } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
+import axios from 'axios';
+import { BASE_URL } from 'config/constant';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const productionOrders = () => {
   const [showDelete, setShowDelete] = useState(false);
   const [edit, setEdit] = useState(false);
-  
-  const [startDate, setStartDate] = useState(new Date("2025/04/25 6:00 PM"));
+  const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(null);
+  const [salesOrders, setSalesOrders] = useState([]);
+  const [salesOrdersProducts, setSalesOrdersProducts] = useState([]);
+  const [sizes, setSizes] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
+  const [productionLine, setProductionLine] = useState([]);
+  const [priorities, setPriorities] = useState([]);
+  const [productionOrdersList, setProductsOrdersList] = useState([]);
+  const [editingOrder, setEditingOrder] = useState(null);
+
+  const token = localStorage.getItem('token');
+  const config = {
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  };
+
+  const getSalesOrders = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}orders`, config);
+      setSalesOrders(response.data.data.data);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  const getSalesOrdersProducts = async (id) => {
+    try {
+      const response = await axios.get(`${BASE_URL}order-products/${id}`, config);
+      setSalesOrdersProducts(response.data.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const getWarehouses = async (id) => {
+    try {
+      const response = await axios.get(`${BASE_URL}warehouses?product_id=${id}`, config);
+      setWarehouses(response.data.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const getProductionLine = async (id) => {
+    try {
+      const response = await axios.get(`${BASE_URL}lines?warehouse=${id}`, config);
+      setProductionLine(response.data.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const getSizes = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}sizes`, config);
+      setSizes(response.data.data);
+    } catch (error) {
+      console.error('Error fetching sizes:', error);
+    }
+  };
+
+  const getPriority = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}priorities`, config);
+      setPriorities(response.data.data);
+    } catch (error) {
+      console.error('Error fetching sizes:', error);
+    }
+  };
+
+  const getProductsOrdersList = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}productions`, config);
+      setProductsOrdersList(response.data.data);
+    } catch (error) {
+      console.error('Error fetching sizes:', error);
+    }
+  };
+
+  useEffect(() => {
+    getSalesOrders();
+    getSizes();
+    getPriority();
+    getProductsOrdersList();
+  }, []);
 
   const handleEditOrder = (editSatus) => {
     setEdit(editSatus);
   };
-  const handleHideEditOrder = (editSatus) => {
-    setEdit(false);
-  };
 
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+  
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(date.getDate()).padStart(2, '0');
+  
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  
+  const handleCreateProductionOrder = () => {
+    const salesOrder = document.getElementById('salesOrder').value;
+    const product = document.getElementById('product').value;
+    const size = document.getElementById('size').value;
+    const quantity = document.getElementById('quantity').value;
+    const warehouse = document.getElementById('warehouse').value;
+    const productionLine = document.getElementById('productionLine').value;
+    const priority = document.getElementById('priority').value;
+    const status = document.getElementById('status')?.value;
+    const startDateValue = startDate ? formatDate(startDate) : null;
+    const endDateValue = endDate ? formatDate(endDate) : null;
+  
+    const data = {
+      order_id: salesOrder,
+      order_product_id: product,
+      size,
+      quantity,
+      warehouse_id: warehouse,
+      line_id: productionLine,
+      priority_id: priority,
+      status,
+      start: formatDate(startDateValue),
+      end: formatDate(endDateValue),
+    };
+
+    if(edit) {
+      data._method = "put";
+    }    
+    if(!edit) {
+    if (!salesOrder || !product || !size || !quantity || !warehouse || !productionLine || !priority) {
+      alert('Please fill all the fields');
+      return;
+    }
+  }
+    console.log(data);
+    
+    if (edit && editingOrder) {
+      axios.post(`${BASE_URL}productions/${editingOrder.order.id}`, data, config)
+        .then(() => {
+          setEdit(false);
+          setEditingOrder(null);
+          getProductsOrdersList();
+        })
+        .catch((error) => {
+          console.error('Error updating production order:', error);
+          alert('Error updating production order');
+        });
+    } else {
+      axios.post(`${BASE_URL}productions`, data, config)
+        .then(() => {
+          getProductsOrdersList();
+        })
+        .catch((error) => {
+          console.error('Error creating production order:', error);
+          alert('Error creating production order');
+        });
+    }
+  };
+  
+
+  const handleEditProductionOrder = (order) => {
+    setEdit(true);
+    setEditingOrder(order);    
+  
+    // Pre-fill the form manually (you might also consider controlled components for scalability)
+    document.getElementById('salesOrder').value = order.order_id;
+    getSalesOrdersProducts(order.order_id);
+  
+    setTimeout(() => {
+      document.getElementById('product').value = order.order_product_id;
+      getWarehouses(order.order_product_id);
+  
+      setTimeout(() => {
+        document.getElementById('warehouse').value = order.warehouse_id;
+        getProductionLine(order.warehouse_id);
+  
+        setTimeout(() => {
+          document.getElementById('productionLine').value = order.line_id;
+        }, 300);
+      }, 300);
+    }, 300);
+  
+    document.getElementById('size').value = order.size.id;
+    document.getElementById('quantity').value = order.quantity;
+    document.getElementById('priority').value = order.priority_id;
+
+    setTimeout(() => {
+      document.getElementById('status').value = order.status;
+    }, 300);
+    setStartDate(formatDate(order.start));
+    setEndDate(new Date(order.end));
+  };
+  
 
   const handleDeleteClose = () => setShowDelete(false);
   const handleDeleteShow = () => setShowDelete(true);
+
   return (
     <React.Fragment>
       <Row>
@@ -30,22 +223,24 @@ const productionOrders = () => {
                 <h5>New Production Order</h5>
                 <Form.Group className="select-group mb-3" controlId="salesOrder">
                   <Form.Label>Sales Order</Form.Label>
-                  <Form.Control as="select" disabled={edit}>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
+                  <Form.Control as="select" disabled={edit} onChange={(e) => getSalesOrdersProducts(e.target.value)}>
+                    <option value="">Select Sales Order</option>
+                    {
+                      salesOrders.map((order, index) => (
+                        <option key={index} value={order.id}>{order.code}</option>
+                      ))
+                    }
                   </Form.Control>
                 </Form.Group>
                 <Form.Group className="select-group mb-3" controlId="product">
                   <Form.Label>Product</Form.Label>
-                  <Form.Control as="select" disabled={edit}>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
+                  <Form.Control as="select" disabled={edit} onChange={(e) => getWarehouses(e.target.value)}>
+                    <option value="">Select Product</option>
+                    {
+                      salesOrdersProducts.map((product, index) => (
+                        <option key={index} value={product.id}>{product.product.name}</option>
+                      ))
+                    }
                   </Form.Control>
                 </Form.Group>
                 <Row>
@@ -53,11 +248,12 @@ const productionOrders = () => {
                     <Form.Group className="select-group mb-3" controlId="size">
                       <Form.Label>Size</Form.Label>
                       <Form.Control as="select" disabled={edit}>
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                        <option>4</option>
-                        <option>5</option>
+                        <option value="">Select Sizes</option>
+                        {
+                          sizes.map((size, index) => (
+                            <option key={index} value={size.id}>{size.name}</option>
+                          ))
+                        }
                       </Form.Control>
                     </Form.Group>
 
@@ -72,76 +268,82 @@ const productionOrders = () => {
 
                 <Form.Group className="select-group mb-3" controlId="warehouse">
                   <Form.Label>Warehouse</Form.Label>
-                  <Form.Control as="select" disabled={edit}>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
+                  <Form.Control as="select" disabled={edit} onChange={(e) => getProductionLine(e.target.value)}>
+                    <option value="">Select Warehouse</option>
+                    {
+                      warehouses.map((warehouse, index) => (
+                        <option key={index} value={warehouse.id}>{warehouse.name}</option>
+                      ))
+                    }
                   </Form.Control>
                 </Form.Group>
                 <Form.Group className="select-group mb-3" controlId="productionLine">
                   <Form.Label>Production Line</Form.Label>
                   <Form.Control as="select" disabled={edit}>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
+                    <option value="">Select Production Line</option>
+                    {productionLine.map((line, index) => (
+                      <option key={index} value={line.id}>{line.name}</option>
+                    ))}
                   </Form.Control>
                 </Form.Group>
-                <Form.Group className="select-group mb-3" controlId="Priority">
+                <Form.Group className="select-group mb-3" controlId="priority">
                   <Form.Label>Priority</Form.Label>
                   <Form.Control as="select" disabled={edit}>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
+                    <option value="">Select Priority</option>
+                    {
+                      priorities.map((priority, index) => (
+                        <option key={index} value={priority.id}>{priority.name}</option>
+                      ))
+                    }
                   </Form.Control>
                 </Form.Group>
-                <Form.Group className="select-group mb-3" controlId="status">
-                  <Form.Label>Status</Form.Label>
-                  <Form.Control as="select">
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                  </Form.Control>
-                </Form.Group>
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId="startDate">
-                      <Form.Label>Start Date</Form.Label>
-                      <DatePicker
-                        selected={startDate}
-                        onChange={(date) => setStartDate(date)}
-                        showTimeSelect
-                        dateFormat="yyyy/MM/dd h:mm aa"
-                        className="form-control"
-                        placeholderText="Select start date & time"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId="endDate">
-                      <Form.Label>End Date</Form.Label>
-                      <DatePicker
-                        selected={endDate}
-                        onChange={(date) => setEndDate(date)}
-                        showTimeSelect
-                        dateFormat="yyyy/MM/dd h:mm aa"
-                        className="form-control"
-                        placeholderText="Select end date & time"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                {
+                  edit && (
+                    <>
+                      <Form.Group className="select-group mb-3" controlId="status">
+                        <Form.Label>Status</Form.Label>
+                        <Form.Control as="select">
+                          <option value="">Select Status</option>
+                          <option value="not started">Pending</option>
+                          <option value="running">In Progress</option>
+                          <option value="finished">Completed</option>
+                        </Form.Control>
+                      </Form.Group>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3" controlId="startDate">
+                            <Form.Label>Start Date</Form.Label>
+                            <DatePicker
+                              selected={startDate}
+                              onChange={(date) => setStartDate(date)}
+                              showTimeSelect
+                              dateFormat="yyyy/MM/dd h:mm aa"
+                              className="form-control"
+                              placeholderText="Select start date & time"
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group className="mb-3" controlId="endDate">
+                            <Form.Label>End Date</Form.Label>
+                            <DatePicker
+                              selected={endDate}
+                              onChange={(date) => setEndDate(date)}
+                              showTimeSelect
+                              dateFormat="yyyy/MM/dd h:mm aa"
+                              className="form-control"
+                              placeholderText="Select end date & time"
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                    </>
+                  )
+                }
                 <Col>
-                  <Button className='w-100' variant="primary" onClick={handleHideEditOrder}>
+                  <Button className='w-100' variant="primary" onClick={handleCreateProductionOrder}>
                     <span className='feather icon-plus me-2'></span>
-                    Create Order
+                    {edit ? 'Update Order' : 'Create Order'}
                   </Button>
                 </Col>
               </Form>
@@ -170,37 +372,41 @@ const productionOrders = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <th scope="row">PO-101</th>
-                        <td>Widget A</td>
-                        <td>Medium</td>
-                        <td>500</td>
-                        <td>-</td>
-                        <td>Line 1</td>
-                        <td>
-                          <div className="progress" style={{ height: '7px' }}>
-                            <div
-                              className={`progress-bar`}
-                              role="progressbar"
-                              style={{ width: `50%` }}
-                              aria-valuenow={70}
-                              aria-valuemin="0"
-                              aria-valuemax="100"
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <span className="badge bg-warning">In Progress</span>
-                        </td>
-                        <td>2025/10/01 - 10:00 AM</td>
-                        <td>2025/10/15 - 10:00 AM</td>
-                        <td>
-                          <div className="d-flex gap-2 actions-btns">
-                            <span className="feather icon-edit edit" onClick={() => handleEditOrder(true)}></span>
-                            <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
-                          </div>
-                        </td>
-                      </tr>
+                      {
+                        productionOrdersList.filter((status) => status.status !== "finished").map((order) => (
+                          <tr key={order.id}>
+                            <th scope="row">{order.order.code}</th>
+                            <td>{order.product.code}</td>
+                            <td>{order.size.name}</td>
+                            <td>{order.quantity}</td>
+                            <td>-</td>
+                            <td>{order.line.name}</td>
+                            <td>
+                              <div className="progress" style={{ height: '7px' }}>
+                                <div
+                                  className={`progress-bar ${order.status === "not started"? "bg-warning" : "" }`}
+                                  role="progressbar"
+                                  style={{ width: `${order.status === "not started"? `0%`: "50%"}` }}
+                                  aria-valuenow={`${order.status === "not started"? `0`: "50"}`}
+                                  aria-valuemin="0"
+                                  aria-valuemax="100"
+                                />
+                              </div>
+                            </td>
+                            <td>
+                              <span className={`badge ${order.status === "not started" ? "bg-warning" : "bg-primary"}`}>{order.status === "not started" ? "Pending": "In Progress"}</span>
+                            </td>
+                            <td>{order.start ? order.start : "-"}</td>
+                            <td>{order.end ? order.end : "-"}</td>
+                            <td>
+                              <div className="d-flex gap-2 actions-btns">
+                                <span className="feather icon-edit edit" onClick={() => handleEditProductionOrder(order)}></span>
+                                <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      }
                     </tbody>
                   </Table>
                 </Tab>
@@ -222,37 +428,40 @@ const productionOrders = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <th scope="row">PO-101</th>
-                        <td>Widget A</td>
-                        <td>Medium</td>
-                        <td>500</td>
-                        <td>-</td>
-                        <td>Line 1</td>
-                        <td>
-                          <div className="progress" style={{ height: '7px' }}>
-                            <div
-                              className={`progress-bar progress-c-green`}
-                              role="progressbar"
-                              style={{ width: `100%` }}
-                              aria-valuenow={100}
-                              aria-valuemin="0"
-                              aria-valuemax="100"
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <span className="badge bg-success">Completed</span>
-                        </td>
-                        <td>2025/10/01 - 10:00</td>
-                        <td>2025/10/15 - 10:00</td>
-                        <td>
-                          <div className="d-flex gap-2 actions-btns">
-                            {/* <span className="feather icon-edit edit"></span> */}
-                            <span className="feather icon-trash-2 delete"></span>
-                          </div>
-                        </td>
-                      </tr>
+                      {
+                        productionOrdersList.filter((status) => status.status === "finished").map((order) => (
+                          <tr key={order.id}>
+                            <th scope="row">{order.order.code}</th>
+                            <td>{order.product.code}</td>
+                            <td>{order.size.name}</td>
+                            <td>{order.quantity}</td>
+                            <td>-</td>
+                            <td>{order.line.name}</td>
+                            <td>
+                              <div className="progress" style={{ height: '7px' }}>
+                                <div
+                                  className={`progress-bar bg-success`}
+                                  role="progressbar"
+                                  style={{ width: `100%` }}
+                                  aria-valuenow={100}
+                                  aria-valuemin="0"
+                                  aria-valuemax="100"
+                                />
+                              </div>
+                            </td>
+                            <td>
+                              <span className="badge bg-success">Completed</span>
+                            </td>
+                            <td>{order.start ? order.start : "-"}</td>
+                            <td>{order.end ? order.end : "-"}</td>
+                            <td>
+                              <div className="d-flex gap-2 actions-btns">
+                                <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      }
                     </tbody>
                   </Table>
                 </Tab>
