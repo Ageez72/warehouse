@@ -1,11 +1,157 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Table, Form, Button, InputGroup, FormControl, Modal } from 'react-bootstrap';
+import { BASE_URL } from 'config/constant';
+import axios from 'axios';
 
 const Products = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [edit, setEdit] = useState(false);
-  const [extraItems, setExtraItems] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
+  const [lines, setLines] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [deleteProductId, setDeleteProductId] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    code: '',
+    warehouses: []
+  });
+  const [editingId, setEditingId] = useState(null);
+
+  const token = localStorage.getItem('token');
+  const headers = {
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  };
+
+  // Fetch all lines
+  const getLines = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}lines`, headers);
+      setLines(response.data.data);
+    } catch (error) {
+      console.error('Error fetching lines:', error);
+    }
+  };
+
+  // Fetch warehouses for dropdown
+  const getWarehouses = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}warehouses`, headers);
+      setWarehouses(response.data.data);
+    } catch (error) {
+      console.error('Error fetching warehouses:', error);
+    }
+  };
+
+  useEffect(() => {
+    getWarehouses();
+    getLines();
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}products`, headers);
+      setProducts(res.data.data);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    }
+  };
+
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleWarehouseChange = (index, field, value) => {
+    const updated = [...formData.warehouses];
+    updated[index] = { ...updated[index], [field]: value };
+    setFormData({ ...formData, warehouses: updated });
+  };
+
+  const addWarehouseRow = () => {
+    const lastItem = formData.warehouses[formData.warehouses.length - 1];
+  
+    // If there's no item yet OR last item is filled, allow adding new one
+    if (!lastItem || (lastItem.warehouse_id && lastItem.line_id)) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        warehouses: [
+          ...prevFormData.warehouses,
+          { warehouse_id: '', line_id: '' }
+        ],
+      }));
+    } else {
+      alert('Please fill in the previous warehouse and line before adding a new one');
+    }
+  };
+  
+
+  const removeWarehouseRow = (index) => {
+    const updated = [...formData.warehouses];
+    updated.splice(index, 1);
+    setFormData({ ...formData, warehouses: updated });
+  };
+
+  const resetForm = () => {
+    setFormData({ name: '', code: '', warehouses: [] });
+    setEditingId(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const data = new FormData();
+    data.append('name', formData.name);
+    data.append('code', formData.code);
+
+    formData.warehouses.forEach((item, index) => {
+      data.append(`warehouses[${index}][warehouse_id]`, item.warehouse_id);
+      data.append(`warehouses[${index}][line_id]`, item.line_id);
+    });
+
+    try {
+      if (editingId) {
+        await axios.put(`${BASE_URL}products/${editingId}`, data, headers);
+      } else {
+        await axios.post(`${BASE_URL}products`, data, headers);
+      }
+      fetchProducts();
+      resetForm();
+    } catch (err) {
+      console.error('Error saving product:', err);
+    }
+  };
+
+  const handleEdit = (product) => {
+    console.log(product);
+    
+    setEditingId(product.id);
+    setFormData({
+      name: product.name,
+      code: product.code,
+      warehouses: product.product_lines || []
+    });
+  };
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(`${BASE_URL}products/${deleteProductId}`, headers);
+      fetchProducts();
+    } catch (err) {
+      console.error('Error deleting product:', err);
+    } finally {
+      setShowDelete(false);
+      setDeleteProductId(null);
+    }
+  };
+  
+  const handleDelete = async (id) => {
+    setDeleteProductId(id);
+    setShowDelete(true);
+  };
 
   const handleAddShow = (editSatus) => {
     setShowAdd(true);
@@ -13,40 +159,14 @@ const Products = () => {
   };
 
   const handleAddClose = () => {
+    resetForm();
     setShowAdd(false);
     setEdit(false);
   };
 
-  
+
+
   const handleDeleteClose = () => setShowDelete(false);
-  const handleDeleteShow = () => setShowDelete(true);
-
-
-  const handleAddExtraItems = () => {
-    if (extraItems.length > 0) {
-      const lastItem = extraItems[extraItems.length - 1];
-      if (!lastItem.warehouseId || !lastItem.lineId) {
-        alert("Please fill the previous extra item before adding a new one.");
-        return;
-      }
-    }
-  
-    setExtraItems([...extraItems, { warehouseId: '', lineId: '' }]);
-  };
-  
-
-  const handleExtraItemChange = (index, field, value) => {
-    const updatedItems = [...extraItems];
-    updatedItems[index][field] = value;
-    setExtraItems(updatedItems);
-  };
-
-  const handleDeleteExtraItem = (index) => {
-    const updatedItems = [...extraItems];
-    updatedItems.splice(index, 1);
-    setExtraItems(updatedItems);
-  };
-
 
   return (
     <React.Fragment>
@@ -66,25 +186,27 @@ const Products = () => {
                     <th>#</th>
                     <th>Code</th>
                     <th>Product Name</th>
-                    <th>Warhouse ID</th>
-                    <th>Line ID</th>
+                    <th>Warhouse</th>
+                    <th>Line</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>@mdo</td>
-                    <td>Mark</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>
-                      <div className="d-flex gap-2 actions-btns">
-                        <span className="feather icon-edit edit" onClick={() => handleAddShow(true)}></span>
-                        <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
-                      </div>
-                    </td>
-                  </tr>
+                  {products.map((product, index) => (
+                    <tr key={product.id}>
+                      <th scope="row">{index + 1}</th>
+                      <td>{product.code}</td>
+                      <td>{product.name}</td>
+                      <td>{product.product_lines?.map(w => w.warehouse.name).join(', ')}</td>
+                      <td>{product.product_lines?.map(w => w.line.name).join(', ')}</td>
+                      <td>
+                        <div className="d-flex gap-2 actions-btns">
+                          <span className="feather icon-edit edit" onClick={() => { handleEdit(product); handleAddShow(true); }}></span>
+                          <span className="feather icon-trash-2 delete" onClick={() => handleDelete(product.id)}></span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </Table>
             </Card.Body>
@@ -104,23 +226,34 @@ const Products = () => {
                   <Col md={6}>
                     <Form.Group className="mb-3" controlId="formBasicUsername">
                       <Form.Label>Code</Form.Label>
-                      <Form.Control type="text" placeholder="Enter code" disabled={edit} />
+                      <Form.Control
+                        type="text"
+                        placeholder="Enter code"
+                        name="code"
+                        value={formData.code}
+                        onChange={handleInputChange}
+                        disabled={edit}
+                      />
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3" controlId="formBasicEmail">
                       <Form.Label>Product Name</Form.Label>
-                      <Form.Control type="text" placeholder="Enter product name" />
+                      <Form.Control type="text"
+                        placeholder="Enter product name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange} />
                     </Form.Group>
                   </Col>
                 </Row>
               </Col>
               <Col md={12}>
-                <span className="feather icon-plus-circle" onClick={handleAddExtraItems}></span>
+                <span className="feather icon-plus-circle" onClick={addWarehouseRow}></span>
               </Col>
 
               {/* extra items */}
-              {extraItems.map((item, index) => (
+              {formData.warehouses.map((item, index) => (
                 <Col md={12} key={index}>
                   <Row className='align-items-center'>
                     <Col md={5}>
@@ -128,15 +261,15 @@ const Products = () => {
                         <Form.Label>Warehouse ID</Form.Label>
                         <Form.Control
                           as="select"
-                          value={item.warehouseId}
-                          onChange={(e) => handleExtraItemChange(index, 'warehouseId', e.target.value)}
+                          value={item.warehouse_id}
+                          onChange={(e) => handleWarehouseChange(index, 'warehouse_id', e.target.value)}
                         >
-                          <option value="">Select Warehouse ID</option>
-                          <option>1</option>
-                          <option>2</option>
-                          <option>3</option>
-                          <option>4</option>
-                          <option>5</option>
+                          <option value="">Select warehouse</option>
+                          {warehouses.map((warehouse) => (
+                            <option key={warehouse.id} value={warehouse.id}>
+                              {warehouse.name}
+                            </option>
+                          ))}
                         </Form.Control>
                       </Form.Group>
                     </Col>
@@ -145,20 +278,20 @@ const Products = () => {
                         <Form.Label>Line ID</Form.Label>
                         <Form.Control
                           as="select"
-                          value={item.lineId}
-                          onChange={(e) => handleExtraItemChange(index, 'lineId', e.target.value)}
+                          value={item.line_id}
+                          onChange={(e) => handleWarehouseChange(index, 'line_id', e.target.value)}
                         >
                           <option value="">Select Line ID</option>
-                          <option>1</option>
-                          <option>2</option>
-                          <option>3</option>
-                          <option>4</option>
-                          <option>5</option>
+                          {lines.map((line) => (
+                            <option key={line.id} value={line.id}>
+                              {line.name}
+                            </option>
+                          ))}
                         </Form.Control>
                       </Form.Group>
                     </Col>
                     <Col md={2} className='text-center'>
-                      <span className="feather icon-x-circle danger-txt" onClick={() => handleDeleteExtraItem(index)}></span>
+                      <span className="feather icon-x-circle danger-txt" onClick={() => removeWarehouseRow(index)}></span>
                     </Col>
                   </Row>
                 </Col>
@@ -170,7 +303,7 @@ const Products = () => {
           <Button variant="secondary" onClick={handleAddClose}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleAddClose}>
+          <Button variant="primary" onClick={handleSubmit}>
             Save
           </Button>
         </Modal.Footer>
@@ -190,7 +323,7 @@ const Products = () => {
           <Button variant="secondary" onClick={handleDeleteClose}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDeleteClose}>
+          <Button variant="danger" onClick={confirmDelete}>
             Delete
           </Button>
         </Modal.Footer>

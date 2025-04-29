@@ -535,7 +535,7 @@
     margin-bottom: 0;
   }
 
-  .datta-scroll.navbar-content {
+  .spartan-scroll.navbar-content {
     height: calc(100vh - #{$header-height});
   }
 
@@ -562,7 +562,7 @@
       transition: unset;
     }
 
-    + .datta-scroll {
+    + .spartan-scroll {
       float: left;
       display: inline-block;
     }
@@ -1211,7 +1211,7 @@
     height: 100%;
     box-shadow: none;
 
-    .datta-scroll.navbar-content {
+    .spartan-scroll.navbar-content {
       height: 100%;
     }
 

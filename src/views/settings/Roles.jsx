@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { BASE_URL } from 'config/constant';
+import axios from 'axios';
 import { Row, Col, Card, Table, Form, Button, InputGroup, FormControl, Modal } from 'react-bootstrap';
-
+import { ConfigContext } from 'contexts/ConfigContext';
 const Roles = () => {
+  const configContext = useContext(ConfigContext);
+  const { roleID } = configContext.state;
   const [showAdd, setShowAdd] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -15,10 +19,11 @@ const Roles = () => {
     setShowAdd(false);
     setEdit(false);
   };
-  
+
 
   const handleDeleteClose = () => setShowDelete(false);
   const handleDeleteShow = () => setShowDelete(true);
+  console.log(configContext.state);
 
   return (
     <React.Fragment>
@@ -27,7 +32,7 @@ const Roles = () => {
           <Card>
             <Card.Header className='d-flex justify-content-between align-items-center'>
               <Card.Title as="h5">Roles</Card.Title>
-              <Button variant="primary" onClick={()=> handleAddShow(false)}>
+              <Button variant="primary" onClick={() => handleAddShow(false)}>
                 Add Role
               </Button>
             </Card.Header>
@@ -42,17 +47,19 @@ const Roles = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Mark</td>
-                    <td>Otto</td>
-                    <td>
-                      <div className="d-flex gap-2 actions-btns">
-                        <span className="feather icon-edit edit" onClick={()=> handleAddShow(true)}></span>
-                        <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
-                      </div>
-                    </td>
-                  </tr>
+                  {roleID?.map((role) => (
+                    <tr key={role.id}>
+                      <th scope="row">1</th>
+                      <td>{role.name}</td>
+                      <td>{role.permissions}</td>
+                      <td>
+                        <div className="d-flex gap-2 actions-btns">
+                          <span className="feather icon-edit edit" onClick={() => handleAddShow(true, role)}></span>
+                          <span className="feather icon-trash-2 delete" onClick={()=> handleDeleteShow(role)}></span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </Table>
             </Card.Body>
@@ -62,7 +69,7 @@ const Roles = () => {
 
       <Modal show={showAdd} onHide={handleAddClose} centered >
         <Modal.Header closeButton>
-          <Modal.Title>{edit ? "Edit": "Add"} Role</Modal.Title>
+          <Modal.Title>{edit ? "Edit" : "Add"} Role</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -104,7 +111,7 @@ const Roles = () => {
           <p>
             Are you sure you want to delete this role?
           </p>
-          <strong className='danger-txt' style={{fontWeight: `700`}}>Note:</strong> This action cannot be undone.
+          <strong className='danger-txt' style={{ fontWeight: `700` }}>Note:</strong> This action cannot be undone.
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleDeleteClose}>

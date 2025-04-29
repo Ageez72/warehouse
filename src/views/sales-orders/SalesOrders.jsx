@@ -1,10 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { BASE_URL } from 'config/constant';
+import axios from 'axios';
 import { Row, Col, Card, Table, Button, Modal, Form, Pagination } from 'react-bootstrap';
 
 const SalesOrders = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [edit, setEdit] = useState(false);
+  const [salesOrdersList, setSalesOrdersList] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+
+
+  const token = localStorage.getItem('token');
+  const config = {
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  };
+  const getSalesOrders = async (i) => {
+    try {    
+      console.log(page);
+        
+      const res = await axios.get(`${BASE_URL}orders?page=${i ? i : page}&limit=${limit}`, config);
+      setSalesOrdersList(res.data.data.data);
+      setTotal(res.data.data.meta.total);
+      setLimit(res.data.data.meta.per_page);
+      setPage(res.data.data.meta.current_page);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+    }
+  };
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    setTimeout(() => {
+      
+      getSalesOrders(newPage)
+    }, 100);
+  };
+
+
+  useEffect(() => {
+    getSalesOrders();
+  }, []);
 
   const handleAddShow = (editSatus) => {
     setShowAdd(true);
@@ -17,15 +59,42 @@ const SalesOrders = () => {
   };
 
   const handleDeleteClose = () => setShowDelete(false);
-  const handleDeleteShow = () => setShowDelete(true);
 
-  let active = 1;
+  const handleDeleteShow = (orderId) => {
+    setSelectedOrderId(orderId);
+    setShowDelete(true);
+  };
+
+  const handleDeleteOrder = async () => {
+    try {
+      await axios.delete(`${BASE_URL}orders/${selectedOrderId}`, config);
+      setSalesOrdersList(salesOrdersList.filter(order => order.id !== selectedOrderId));
+      setShowDelete(false);
+    } catch (err) {
+      console.error('Error deleting order:', err);
+    }
+  };
+
+
+
+
+  let active = page;
   let items = [];
   for (let number = 1; number <= 3; number++) {
     items.push(
-      <Pagination.Item key={number} active={number === active}>
-        {number}
-      </Pagination.Item>
+      <Pagination>
+        <Pagination.Prev onClick={() => handlePageChange(page - 1)} disabled={page === 1}>
+          Previous
+        </Pagination.Prev>
+        {[...Array(Math.ceil(total / limit))].map((_, number) => (
+          <Pagination.Item key={number + 1} active={number + 1 === page} onClick={() => handlePageChange(number + 1)}>
+            {number + 1}
+          </Pagination.Item>
+        ))}
+        <Pagination.Next onClick={() => handlePageChange(page + 1)} disabled={page >= Math.ceil(total / limit)}>
+          Next
+        </Pagination.Next>
+      </Pagination>
     );
   }
 
@@ -36,9 +105,11 @@ const SalesOrders = () => {
           <Card>
             <Card.Header className='d-flex justify-content-between align-items-center'>
               <Card.Title as="h5">Sales Orders</Card.Title>
-              <Button variant="primary" onClick={() => handleAddShow(false)}>
-                <span className='feather icon-plus me-2'></span>
-                Add Sales Order
+              <Button variant="primary" className='p-0 m-0'>
+                <Link type="button" to="/create-sales-order" className='text-white text-decoration-none' style={{ padding: "10px 20px" }}>
+                  <span className='feather icon-plus me-2'></span>
+                  Add Sales Order
+                </Link>
               </Button>
             </Card.Header>
             <Card.Body>
@@ -53,28 +124,41 @@ const SalesOrders = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <th scope="row">#ORD-2025-001</th>
-                    <td>Mark</td>
-                    <td>Otto</td>
-                    <td>
-                      <span className="badge bg-success">Shipped</span>
-                    </td>
-                    <td>
-                      <div className="d-flex gap-2 actions-btns">
-                        <span className="feather icon-edit edit" onClick={() => handleAddShow(true)}></span>
-                        <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
-                      </div>
-                    </td>
-                  </tr>
+                  {
+                    salesOrdersList?.map((order, idx) => (
+                      <tr key={order.id}>
+                        <th scope="row">{order.id}</th>
+                        <td>{order.customer.name}</td>
+                        <td>{order.products.length}</td>
+                        <td>
+                          <span className={`badge bg-${order.status === 'Shipped' ? 'success' : 'warning'}`}>{order.status}</span>
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2 actions-btns">
+                            {/* <span className="feather icon-edit edit" onClick={() => handleAddShow(true)}></span> */}
+                            <span className="feather icon-trash-2 delete" onClick={() => handleDeleteShow(order.id)}></span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  }
                 </tbody>
               </Table>
               <Col className='justify-content-end d-flex mt-2'>
-                <Pagination className='mb-0'>
-                  <Pagination.Prev>Previous</Pagination.Prev>
-                  {items}
-                  <Pagination.Next>Next</Pagination.Next>
+                <Pagination>
+                  <Pagination.Prev onClick={() => handlePageChange(page - 1)} disabled={page === 1}>
+                    Previous
+                  </Pagination.Prev>
+                  {[...Array(Math.ceil(total / limit))].map((_, number) => (
+                    <Pagination.Item key={number + 1} active={number + 1 === page} onClick={() => handlePageChange(number + 1)}>
+                      {number + 1}
+                    </Pagination.Item>
+                  ))}
+                  <Pagination.Next onClick={() => handlePageChange(page + 1)} disabled={page >= Math.ceil(total / limit)}>
+                    Next
+                  </Pagination.Next>
                 </Pagination>
+
               </Col>
             </Card.Body>
           </Card>
@@ -227,7 +311,7 @@ const SalesOrders = () => {
           <Button variant="secondary" onClick={handleDeleteClose}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDeleteClose}>
+          <Button variant="danger" onClick={handleDeleteOrder}>
             Delete
           </Button>
         </Modal.Footer>

@@ -2,7 +2,7 @@ const role = localStorage.getItem('role');
 
 let filteredItems = [];
 
-// if (role === 'admin') {
+if (role === 'Super Admin') {
   filteredItems = [
     {
       id: 'navigation',
@@ -51,6 +51,13 @@ let filteredItems = [];
           type: 'item',
           icon: 'feather icon-shopping-cart',
           url: '/sales-orders'
+        },
+        {
+          id: 'create-sales-orders',
+          title: 'Create Sales Orders',
+          type: 'item',
+          icon: 'feather icon-shopping-cart',
+          url: '/create-sales-order'
         },
         {
           id: 'warehouse-inventory',
@@ -132,26 +139,26 @@ let filteredItems = [];
       ]
     },
   ]
-// } else if (role === 'sales-order') {
-//   // Sales-order gets only sales-orders route
-//   filteredItems = [
-//     {
-//       id: 'navigation',
-//       title: 'Navigation',
-//       type: 'group',
-//       icon: 'icon-navigation',
-//       children: [
-//         {
-//           id: 'sales-orders',
-//           title: 'Sales Orders',
-//           type: 'item',
-//           icon: 'feather icon-shopping-cart',
-//           url: '/sales-orders'
-//         }
-//       ]
-//     }
-//   ];
-// }
+} else if (role === 'sales-order') {
+  // Sales-order gets only sales-orders route
+  filteredItems = [
+    {
+      id: 'navigation',
+      title: 'Navigation',
+      type: 'group',
+      icon: 'icon-navigation',
+      children: [
+        {
+          id: 'sales-orders',
+          title: 'Sales Orders',
+          type: 'item',
+          icon: 'feather icon-shopping-cart',
+          url: '/sales-orders'
+        }
+      ]
+    }
+  ];
+}
 
 const menuItems = {
   items: filteredItems

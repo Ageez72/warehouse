@@ -4,9 +4,12 @@ import * as actionType from '../store/actions';
 import { CONFIG } from '../config/constant';
 
 const initialState = {
-  ...CONFIG,
+  // ...CONFIG,
   isOpen: [],
-  isTrigger: []
+  isTrigger: [],
+  roleID: null,
+  permissions: null,
+  warehouses: null,
 };
 const ConfigContext = createContext(initialState);
 const { Provider } = ConfigContext;
@@ -81,6 +84,21 @@ const ConfigProvider = ({ children }) => {
           ...state,
           layout: initialState.layout,
           collapseMenu: initialState.collapseMenu
+        };
+      case actionType.ROLE_ID:
+        return {
+          ...state,
+          roleID: action.payload,
+        };
+      case actionType.PERMISSIONS:
+        return {
+          ...state,
+          permissions: action.payload,
+        };
+      case actionType.WAREHOUSES:
+        return {
+          ...state,
+          warehouses: action.payload,
         };
       default:
         throw new Error();

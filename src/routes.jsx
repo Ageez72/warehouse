@@ -1,10 +1,9 @@
 import React, { Suspense, Fragment, lazy } from 'react';
+import AuthGuard from 'components/AuthGuard/AuthGuard';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Loader from './components/Loader/Loader';
 import AdminLayout from './layouts/AdminLayout';
-
-import { BASE_URL } from './config/constant';
 
 export const renderRoutes = (routes = []) => (
   <Suspense fallback={<Loader />}>
@@ -49,6 +48,7 @@ const routes = [
   {
     path: '*',
     layout: AdminLayout,
+    guard: AuthGuard,
     routes: [
       {
         exact: 'true',
@@ -79,6 +79,11 @@ const routes = [
         exact: 'true',
         path: '/sales-orders',
         element: lazy(() => import('./views/sales-orders/SalesOrders'))
+      },
+      {
+        exact: 'true',
+        path: '/create-sales-order',
+        element: lazy(() => import('./views/CreateSalesOrders/CreateSalesOrders'))
       },
       {
         exact: 'true',
@@ -138,7 +143,7 @@ const routes = [
       {
         path: '*',
         exact: 'true',
-        element: () => <Navigate to="/dashboard" replace />
+        element: () => <Navigate to="/login" replace />
       }
     ]
   }
