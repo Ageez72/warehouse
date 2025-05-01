@@ -133,7 +133,7 @@ const Roles = () => {
                     <tr key={role.id}>
                       <td>{index + 1}</td>
                       <td>{role.name}</td>
-                      <td>{role.permissions}</td>
+                      <td>{role?.permissions[0]?.name}</td>
                       <td>
                         <div className="d-flex gap-2 actions-btns">
                           <span className="feather icon-edit edit text-primary cursor-pointer" onClick={() => handleAddShow(true, role)}></span>

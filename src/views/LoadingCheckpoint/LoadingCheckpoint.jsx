@@ -13,8 +13,7 @@ import {
 import QrScanner from 'components/QrScanner/QrScanner';
 
 const LoadingCheckpoint = () => {
-  const [loadedPallets, setLoadedPallets] = useState(['PAL-2025-089', 'PAL-2025-088']);
-  const [unloadedPallets, setUnloadedPallets] = useState(['PAL-2025-090', 'PAL-2025-091']);
+  const [loadedPallets, setLoadedPallets] = useState([]);
   const [scannedCode, setScannedCode] = useState('');
   const totalPallets = 12;
   const progress = loadedPallets.length;
@@ -33,7 +32,7 @@ const LoadingCheckpoint = () => {
     if (data && !loadedPallets.includes(data)) {
       setScannedCode(data);
       setLoadedPallets((prev) => [...prev, data]);
-      setUnloadedPallets((prev) => prev.filter(p => p !== data));
+      // setUnloadedPallets((prev) => prev.filter(p => p !== data));
       handleLoadingCheckpoint(data)
     }
   };
@@ -42,7 +41,10 @@ const LoadingCheckpoint = () => {
     try {
       const response = await axios.get(`${BASE_URL}checkpoint?qr_code=${code}`, config);
       if (response.status === 200) {
-        console.log(response);
+        const responseCode = response.data.code;
+        if(responseCode){
+          setLoadedPallets((prev) => [...prev, responseCode]);
+        }        
       } else {
         alert('Failed to assign shipping!');
       }
@@ -51,6 +53,7 @@ const LoadingCheckpoint = () => {
       alert('Error assigning shipping!');
     }
   }
+console.log(loadedPallets);
 
   return (
     <Container className="my-4">
@@ -105,8 +108,8 @@ const LoadingCheckpoint = () => {
                   <span className='feather icon-check-circle me-2'></span>
                   Loaded Pallets</h6>
                 <ListGroup variant="flush">
-                  {loadedPallets.map((pallet) => (
-                    <ListGroup.Item key={pallet} className="item-success text-white">
+                  {loadedPallets.map((pallet, i) => (
+                    <ListGroup.Item key={i} className="item-success text-white">
                       {pallet}
                       <span className='feather icon-check'></span>
                     </ListGroup.Item>
