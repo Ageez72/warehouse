@@ -18,6 +18,7 @@ const productionOrders = () => {
   const [priorities, setPriorities] = useState([]);
   const [productionOrdersList, setProductsOrdersList] = useState([]);
   const [editingOrder, setEditingOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const token = localStorage.getItem('token');
   const config = {
@@ -103,19 +104,19 @@ const productionOrders = () => {
 
   function formatDate(dateString) {
     const date = new Date(dateString);
-  
+
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
     const day = String(date.getDate()).padStart(2, '0');
-  
+
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
-  
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
-  
+
   const handleCreateProductionOrder = () => {
     const salesOrder = document.getElementById('salesOrder').value;
     const product = document.getElementById('product').value;
@@ -127,7 +128,7 @@ const productionOrders = () => {
     const status = document.getElementById('status')?.value;
     const startDateValue = startDate ? formatDate(startDate) : null;
     const endDateValue = endDate ? formatDate(endDate) : null;
-  
+
     const data = {
       order_id: salesOrder,
       order_product_id: product,
@@ -141,17 +142,17 @@ const productionOrders = () => {
       end: formatDate(endDateValue),
     };
 
-    if(edit) {
+    if (edit) {
       data._method = "put";
-    }    
-    if(!edit) {
-    if (!salesOrder || !product || !size || !quantity || !warehouse || !productionLine || !priority) {
-      alert('Please fill all the fields');
-      return;
     }
-  }
+    if (!edit) {
+      if (!salesOrder || !product || !size || !quantity || !warehouse || !productionLine || !priority) {
+        alert('Please fill all the fields');
+        return;
+      }
+    }
     console.log(data);
-    
+
     if (edit && editingOrder) {
       axios.post(`${BASE_URL}productions/${editingOrder.order.id}`, data, config)
         .then(() => {
@@ -174,30 +175,30 @@ const productionOrders = () => {
         });
     }
   };
-  
+
 
   const handleEditProductionOrder = (order) => {
     setEdit(true);
-    setEditingOrder(order);    
-  
+    setEditingOrder(order);
+
     // Pre-fill the form manually (you might also consider controlled components for scalability)
     document.getElementById('salesOrder').value = order.order_id;
     getSalesOrdersProducts(order.order_id);
-  
+
     setTimeout(() => {
       document.getElementById('product').value = order.order_product_id;
       getWarehouses(order.order_product_id);
-  
+
       setTimeout(() => {
         document.getElementById('warehouse').value = order.warehouse_id;
         getProductionLine(order.warehouse_id);
-  
+
         setTimeout(() => {
           document.getElementById('productionLine').value = order.line_id;
         }, 300);
       }, 300);
     }, 300);
-  
+
     document.getElementById('size').value = order.size.id;
     document.getElementById('quantity').value = order.quantity;
     document.getElementById('priority').value = order.priority_id;
@@ -208,10 +209,20 @@ const productionOrders = () => {
     setStartDate(formatDate(order.start));
     setEndDate(new Date(order.end));
   };
-  
+
 
   const handleDeleteClose = () => setShowDelete(false);
   const handleDeleteShow = () => setShowDelete(true);
+
+  const handleDeleteProductionOrder = async () => {
+    try {
+      await axios.delete(`${BASE_URL}orders/${selectedOrder.order.id}`, config);
+      setSalesOrdersProducts(salesOrdersProducts.filter(order => order.id !== selectedOrder.order.id));
+      handleDeleteClose();
+    } catch (err) {
+      console.error('Error deleting order:', err);
+    }
+  }
 
   return (
     <React.Fragment>
@@ -384,24 +395,24 @@ const productionOrders = () => {
                             <td>
                               <div className="progress" style={{ height: '7px' }}>
                                 <div
-                                  className={`progress-bar ${order.status === "not started"? "bg-warning" : "" }`}
+                                  className={`progress-bar ${order.status === "not started" ? "bg-warning" : ""}`}
                                   role="progressbar"
-                                  style={{ width: `${order.status === "not started"? `0%`: "50%"}` }}
-                                  aria-valuenow={`${order.status === "not started"? `0`: "50"}`}
+                                  style={{ width: `${order.status === "not started" ? `0%` : "50%"}` }}
+                                  aria-valuenow={`${order.status === "not started" ? `0` : "50"}`}
                                   aria-valuemin="0"
                                   aria-valuemax="100"
                                 />
                               </div>
                             </td>
                             <td>
-                              <span className={`badge ${order.status === "not started" ? "bg-warning" : "bg-primary"}`}>{order.status === "not started" ? "Pending": "In Progress"}</span>
+                              <span className={`badge ${order.status === "not started" ? "bg-warning" : "bg-primary"}`}>{order.status === "not started" ? "Pending" : "In Progress"}</span>
                             </td>
                             <td>{order.start ? order.start : "-"}</td>
                             <td>{order.end ? order.end : "-"}</td>
                             <td>
                               <div className="d-flex gap-2 actions-btns">
                                 <span className="feather icon-edit edit" onClick={() => handleEditProductionOrder(order)}></span>
-                                <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
+                                <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(order) }}></span>
                               </div>
                             </td>
                           </tr>
@@ -484,7 +495,7 @@ const productionOrders = () => {
           <Button variant="secondary" onClick={handleDeleteClose}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDeleteClose}>
+          <Button variant="danger" onClick={handleDeleteProductionOrder}>
             Delete
           </Button>
         </Modal.Footer>

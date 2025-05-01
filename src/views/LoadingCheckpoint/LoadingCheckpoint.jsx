@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { BASE_URL } from 'config/constant';
 import {
   Container,
   Row,
@@ -17,6 +19,14 @@ const LoadingCheckpoint = () => {
   const totalPallets = 12;
   const progress = loadedPallets.length;
   // const progressPercent = (progress / totalPallets) * 100;
+
+  const token = localStorage.getItem('token');
+  const config = {
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  };
   const progressPercent = 0.5 * 100;
 
   const handleScan = (data) => {
@@ -24,8 +34,23 @@ const LoadingCheckpoint = () => {
       setScannedCode(data);
       setLoadedPallets((prev) => [...prev, data]);
       setUnloadedPallets((prev) => prev.filter(p => p !== data));
+      handleLoadingCheckpoint(data)
     }
   };
+
+  const handleLoadingCheckpoint = async (code) => {
+    try {
+      const response = await axios.get(`${BASE_URL}checkpoint?qr_code=${code}`, config);
+      if (response.status === 200) {
+        console.log(response);
+      } else {
+        alert('Failed to assign shipping!');
+      }
+    } catch (error) {
+      console.error('Error assigning shipping:', error);
+      alert('Error assigning shipping!');
+    }
+  }
 
   return (
     <Container className="my-4">
@@ -77,7 +102,7 @@ const LoadingCheckpoint = () => {
 
               <div className='pallets-items mt-5'>
                 <h6 className="text-success">
-                <span className='feather icon-check-circle me-2'></span>
+                  <span className='feather icon-check-circle me-2'></span>
                   Loaded Pallets</h6>
                 <ListGroup variant="flush">
                   {loadedPallets.map((pallet) => (

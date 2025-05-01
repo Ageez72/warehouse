@@ -115,12 +115,14 @@ const Products = () => {
 
     try {
       if (editingId) {
-        await axios.put(`${BASE_URL}products/${editingId}`, data, headers);
+        data.append('_method', 'put');
+        await axios.post(`${BASE_URL}products/${editingId}`, data, headers);
       } else {
         await axios.post(`${BASE_URL}products`, data, headers);
       }
       fetchProducts();
       resetForm();
+      setShowAdd(false);
     } catch (err) {
       console.error('Error saving product:', err);
     }

@@ -37,6 +37,7 @@
     "react-icons": "^5.0.1",
     "react-perfect-scrollbar": "^1.5.8",
     "react-router-dom": "^6.22.3",
+    "react-select": "^5.10.1",
     "vite": "^5.2.0",
     "vite-jsconfig-paths": "^2.0.1",
     "web-vitals": "^3.5.2",

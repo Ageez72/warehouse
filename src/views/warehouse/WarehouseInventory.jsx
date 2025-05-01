@@ -1,7 +1,31 @@
 import React from 'react';
+import { useEffect, useState } from 'react';
 import { Row, Col, Card, Table } from 'react-bootstrap';
-
+import axios from 'axios';
+import { BASE_URL } from 'config/constant';
 const WarehouseInventory = () => {
+  const [warehouseList, setWarehouseList] = useState([]);
+
+  const token = localStorage.getItem('token');
+  const config = {
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  };
+
+    const getWarehouseList = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}inventory `, config);
+        setWarehouseList(response.data.data);
+      } catch (error) {
+        console.error('Error fetching Warehouse List:', error);
+      }
+    };
+
+    useEffect(() => {
+      getWarehouseList();
+    }, []);
 
   return (
     <React.Fragment>
@@ -24,24 +48,28 @@ const WarehouseInventory = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <th scope="row">
-                        <span className="feather icon-layers me-2"></span>
-                        <span>Cardboard Boxes</span>
-                      </th>
-                      <td>Large</td>
-                      <td>
-                        <span className="feather icon-inbox me-2"></span>
-                        <span>24</span>
-                      </td>
-                      <td>
-                        <span className="feather icon-box me-2"></span>
-                        <span>240</span>
-                      </td>
-                      <td>
-                        <span className="badge bg-success">In Stock</span>
-                      </td>
-                    </tr>
+                    {
+                      warehouseList.map((item, index) => (
+                        <tr key={index}>
+                          <th scope="row">
+                            <span className="feather icon-layers me-2"></span>
+                            <span>{item.production.product.name}</span>
+                          </th>
+                          <td>{item.production.size.name}</td>
+                          <td>
+                            <span className="feather icon-inbox me-2"></span>
+                            <span>{item.total_pallets}</span>
+                          </td>
+                          <td>
+                            <span className="feather icon-box me-2"></span>
+                            <span>{item.total_bxes}</span>
+                          </td>
+                          <td>
+                            <span className={`badge ${item.production.status === 'In Stock' ? 'bg-success' : 'bg-danger'}`}>{item.production.status}</span>
+                          </td>
+                        </tr>
+                      ))
+                    }
                   </tbody>
                 </Table>
               </div>

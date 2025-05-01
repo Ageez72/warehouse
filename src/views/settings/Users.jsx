@@ -70,10 +70,14 @@ const Users = () => {
       role_id: currentUser.role_id,
     };
 
+    if(edit) {
+      userData._method = "put"
+    }
+
     // Make the API call to edit or add the user
     axios
       .request({
-        method: edit ? 'put' : 'post',  // Use PUT or POST based on the edit flag
+        method:'post',  // Use PUT or POST based on the edit flag
         url: url,
         data: userData,
         headers: {
@@ -102,7 +106,8 @@ const Users = () => {
           };
           setUsers([newUser, ...users]);
         }
-        handleAddClose(); // Close the modal after saving
+        handleAddClose();
+        location.reload();
       })
       .catch((error) => {
         console.error('Error saving user!', error);
@@ -198,14 +203,12 @@ const Users = () => {
                     type="text"
                     value={currentUser?.name || ''}
                     onChange={(e) => setCurrentUser({ ...currentUser, name: e.target.value })}
-                    disabled={edit}
                   />
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="formBasicEmail">
                   <Form.Label>Email address</Form.Label>
                   <Form.Control
-                    disabled={edit}
                     type="email"
                     value={currentUser?.email || ''}
                     onChange={(e) => setCurrentUser({ ...currentUser, email: e.target.value })}
@@ -225,14 +228,13 @@ const Users = () => {
                 <Form.Group className="mb-3" controlId="formBasicPassword">
                   <Form.Label>Password</Form.Label>
                   <Form.Control
-                    disabled={edit}
                     type="password"
                     value={currentUser?.password || ''}
                     onChange={(e) => setCurrentUser({ ...currentUser, password: e.target.value })}
                   />
                 </Form.Group>
-                <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
-                  <Form.Label>Permessions ID</Form.Label>
+                <Form.Group className="select-group mb-3" controlId="roleID">
+                  <Form.Label>Role ID</Form.Label>
                   <Form.Control
                     as="select"
                     value={currentUser?.role_id || ''}
