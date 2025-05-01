@@ -13,6 +13,7 @@ const AdminLayout = ({ children }) => {
   const windowSize = useWindowSize();
   const ref = useRef();
   const configContext = useContext(ConfigContext);
+  const role = localStorage.getItem('role');
 
   const { collapseMenu, headerFixedLayout } = configContext.state;
   const { dispatch } = configContext;
@@ -43,14 +44,17 @@ const AdminLayout = ({ children }) => {
 
   let common = (
     <React.Fragment>
-      <Navigation />
+      {
+        role === 'Super Admin' && <Navigation />
+      }
+      
       <NavBar />
     </React.Fragment>
   );
 
   let mainContainer = (
     <React.Fragment>
-      <div className="pcoded-main-container">
+      <div className={`${role === 'Super Admin' && 'pcoded-main-container'}`}>
         <div className={mainClass.join(' ')}>
           <div className="pcoded-content">
             <div className="pcoded-inner-content">

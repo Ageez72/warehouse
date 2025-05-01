@@ -485,11 +485,13 @@ td {
   .progress-bar {
     box-shadow: none;
     border-radius: 100px;
+
     &.bg-success {
       background-color: #10B981 !important;
     }
   }
 }
+
 .progress-title {
   font-size: 16px;
   font-weight: 700;
@@ -502,6 +504,7 @@ td {
     font-weight: 700;
     margin-bottom: 15px;
   }
+
   .list-group-item {
     display: flex;
     justify-content: space-between;
@@ -551,6 +554,37 @@ td {
   }
 }
 
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
   background-color: #1D4ED8;
+}
+
+#reader__dashboard {
+  button {
+    color: #fff;
+    border: 1px solid transparent;
+    padding: 10px 20px;
+    border-radius: 0.25rem;
+    font-size: 14px;
+    margin-bottom: 5px;
+    margin-right: 10px;
+    transition: all 0.3s ease-in-out;
+  }
+
+  #html5-qrcode-button-camera-permission,
+  #html5-qrcode-button-camera-start {
+    background-color: #2563EB;
+    border-color: #2563EB;
+  }
+
+  #html5-qrcode-button-camera-stop {
+    background-color: #f44236;
+    border-color: #f44236;
+  }
+
+  #html5-qrcode-button-file-selection {
+    padding: 5px;
+    background-color: #2563EB;
+    border-color: #2563EB;
+  }
 }

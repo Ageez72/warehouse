@@ -14,22 +14,25 @@ const App = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    axios.get(usersUrl, {
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then((response) => {
-        dispatch({ type: actionType.ROLE_ID, payload: response.data.data });
-      })
-      .catch((error) => {
-        if (error.response && error.response.status === 401) {
-          console.error('User is not authenticated');
-        } else {
-          console.error("There was an error fetching the users!", error);
+    const role = localStorage.getItem('role');
+    if (role === "Super Admin") {
+      axios.get(usersUrl, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      });
+      })
+        .then((response) => {
+          dispatch({ type: actionType.ROLE_ID, payload: response.data.data });
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            console.error('User is not authenticated');
+          } else {
+            console.error("There was an error fetching the users!", error);
+          }
+        });
+    }
 
   }, []);
 

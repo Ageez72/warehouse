@@ -11,10 +11,21 @@ const JWTLogin = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
-    
     if (token && role === 'Super Admin') {
       console.log('token', token);
       window.location.href = '/dashboard';
+    }else if (token && role === 'Shipping Orders') {
+      window.location.href = '/shipping-orders';
+    }else if (token && role  === 'Sales Order') {
+      window.location.href = '/sales-orders';
+    }else if (token && role  === 'Palletizing') {
+      window.location.href = '/palletizing';
+    }else if (token && role  === 'Warehouse Inventory') {
+      window.location.href = '/warehouse-inventory';
+    }else if (token && role  === 'Production Orders') {
+      window.location.href = '/production-orders';
+    }else if (token && role  === 'Loading Checkpoint') {
+      window.location.href = '/loading-checkpoint';
     }
   }, []);
 
@@ -57,6 +68,18 @@ const JWTLogin = () => {
           // Optionally redirect
           if (response.data.data.role.name === 'Super Admin') {
             window.location.href = '/dashboard';
+          }else if (response.data.data.role.name === 'Shipping Orders') {
+            window.location.href = '/shipping-orders';
+          }else if (response.data.data.role.name === 'Sales Order') {
+            window.location.href = '/sales-orders';
+          }else if (response.data.data.role.name === 'Palletizing') {
+            window.location.href = '/palletizing';
+          }else if (response.data.data.role.name === 'Warehouse Inventory') {
+            window.location.href = '/warehouse-inventory';
+          }else if (response.data.data.role.name === 'Production Orders') {
+            window.location.href = '/production-orders';
+          }else if (response.data.data.role.name === 'Loading Checkpoint') {
+            window.location.href = '/loading-checkpoint';
           }
       
         } catch (error) {
