@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BASE_URL } from 'config/constant';
 import {
@@ -9,11 +9,15 @@ import {
   ProgressBar,
   ListGroup,
   Alert,
+  Form,
+  Table
 } from 'react-bootstrap';
 import QrScanner from 'components/QrScanner/QrScanner';
 
 const LoadingCheckpoint = () => {
   const [loadedPallets, setLoadedPallets] = useState([]);
+  const [docksList, setDocksList] = useState([]);
+  const [selectedDock, setSelectedDock] = useState('dock1');
   const [scannedCode, setScannedCode] = useState('');
   const totalPallets = 12;
   const progress = loadedPallets.length;
@@ -42,9 +46,9 @@ const LoadingCheckpoint = () => {
       const response = await axios.get(`${BASE_URL}checkpoint?qr_code=${code}`, config);
       if (response.status === 200) {
         const responseCode = response.data.code;
-        if(responseCode){
+        if (responseCode) {
           setLoadedPallets((prev) => [...prev, responseCode]);
-        }        
+        }
       } else {
         alert('Failed to assign shipping!');
       }
@@ -53,11 +57,72 @@ const LoadingCheckpoint = () => {
       alert('Error assigning shipping!');
     }
   }
-console.log(loadedPallets);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const docksRes = await axios.get(`${BASE_URL}docks?dock=${selectedDock}`, config);
+        setDocksList(docksRes.data.data.all);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, [selectedDock]);
+
+  const handleDocks = (dock) => {
+    setSelectedDock(dock);
+  }
 
   return (
     <Container className="my-4">
       <Row className="g-4">
+        <Col xs={12}>
+          <Card>
+            <Card.Header>
+              <Card.Title className="mb-3" as="h5">Docks</Card.Title>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="select-group mb-3" controlId="productionLine">
+                    <Form.Label>Dock Number</Form.Label>
+                    <Form.Control as="select" onChange={(e) => handleDocks(e.target.value)}>
+                      <option value="">Select Dock</option>
+                      <option value="dock1" selected>Dock 1</option>
+                      <option value="dock2">Dock 2</option>
+                      <option value="dock3">Dock 3</option>
+                    </Form.Control>
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Card.Header>
+            <Card.Body>
+              <Table responsive hover>
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    {/* <th>Pallet ID</th> */}
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {docksList.length > 0 ? docksList.map((item, index) => (
+                    <tr key={index}>
+                      <th scope="row">{item.order.code}</th>
+                      <td>{item.customer.name}</td>
+                      {/* <td>{item.name}</td> */}
+                      <td>{item.time}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="6" className="text-center">No data available</td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </Card.Body>
+          </Card>
+        </Col>
         <Col md={8}>
           <Card className="h-100">
             <Card.Header>
@@ -104,6 +169,20 @@ console.log(loadedPallets);
               />
 
               <div className='pallets-items mt-5'>
+                <h6 className="text-danger">
+                  <span className='feather icon-check-circle me-2'></span>
+                  UnLoaded Pallets
+                </h6>
+                <ListGroup variant="flush">
+                  {loadedPallets.map((pallet, i) => (
+                    <ListGroup.Item key={i} className="item-danger text-white">
+                      {pallet}
+                      <span className='feather icon-check'></span>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              </div>
+              <div className='pallets-items mt-4'>
                 <h6 className="text-success">
                   <span className='feather icon-check-circle me-2'></span>
                   Loaded Pallets</h6>

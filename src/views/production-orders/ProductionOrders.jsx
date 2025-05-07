@@ -46,7 +46,10 @@ const productionOrders = () => {
     }
   };
 
-  const getWarehouses = async (id) => {
+  const getWarehouses = async (id, detailsID) => {
+    console.log(detailsID);
+
+    getProductionDetails(detailsID)
     try {
       const response = await axios.get(`${BASE_URL}warehouses?product_id=${id}`, config);
       setWarehouses(response.data.data);
@@ -55,9 +58,19 @@ const productionOrders = () => {
     }
   };
 
+  const getProductionDetails = (id) => {
+    for (let i = 0; i < salesOrdersProducts.length; i++) {
+      const element = salesOrdersProducts[i];
+      if (id == element.id) {
+        document.getElementById('size').value = element.size_id;
+        document.getElementById('quantity').value = element.quantity;
+      }
+    }
+  }
+
   const getProductionLine = async (id) => {
     try {
-      const response = await axios.get(`${BASE_URL}lines?warehouse=${id}`, config);
+      const response = await axios.get(`${BASE_URL}lines?warehouse_id=${id}`, config);
       setProductionLine(response.data.data);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -128,19 +141,30 @@ const productionOrders = () => {
     const status = document.getElementById('status')?.value;
     const startDateValue = startDate ? formatDate(startDate) : null;
     const endDateValue = endDate ? formatDate(endDate) : null;
+    console.log(product);
+    
+    let data;
 
-    const data = {
-      order_id: salesOrder,
-      order_product_id: product,
-      size,
-      quantity,
-      warehouse_id: warehouse,
-      line_id: productionLine,
-      priority_id: priority,
-      status,
-      start: formatDate(startDateValue),
-      end: formatDate(endDateValue),
-    };
+    if(edit){
+      data = {
+        status,
+        start: formatDate(startDateValue),
+        end: formatDate(endDateValue),
+      };
+    }else {
+      data = {
+        order_id: salesOrder,
+        order_product_id: JSON?.parse(product).id,
+        size,
+        quantity,
+        warehouse_id: warehouse,
+        line_id: productionLine,
+        priority_id: priority,
+        status,
+        start: formatDate(startDateValue),
+        end: formatDate(endDateValue),
+      };
+    }
 
     if (edit) {
       data._method = "put";
@@ -151,10 +175,10 @@ const productionOrders = () => {
         return;
       }
     }
-    console.log(data);
+    console.log(editingOrder);
 
     if (edit && editingOrder) {
-      axios.post(`${BASE_URL}productions/${editingOrder.order.id}`, data, config)
+      axios.post(`${BASE_URL}productions/${editingOrder.id}`, data, config)
         .then(() => {
           setEdit(false);
           setEditingOrder(null);
@@ -245,11 +269,23 @@ const productionOrders = () => {
                 </Form.Group>
                 <Form.Group className="select-group mb-3" controlId="product">
                   <Form.Label>Product</Form.Label>
-                  <Form.Control as="select" disabled={edit} onChange={(e) => getWarehouses(e.target.value)}>
+                  <Form.Control
+                    as="select"
+                    disabled={edit}
+                    onChange={(e) => {
+                      const selected = JSON.parse(e.target.value);
+                      getWarehouses(selected.product_id, selected.id);
+                    }}
+                  >
                     <option value="">Select Product</option>
                     {
                       salesOrdersProducts.map((product, index) => (
-                        <option key={index} value={product.id}>{product.product.name}</option>
+                        <option
+                          key={index}
+                          value={JSON.stringify({ product_id: product.product_id, id: product.id })}
+                        >
+                          {product.product.name}
+                        </option>
                       ))
                     }
                   </Form.Control>
@@ -258,7 +294,7 @@ const productionOrders = () => {
                   <Col md={6}>
                     <Form.Group className="select-group mb-3" controlId="size">
                       <Form.Label>Size</Form.Label>
-                      <Form.Control as="select" disabled={edit}>
+                      <Form.Control as="select" disabled={true}>
                         <option value="">Select Sizes</option>
                         {
                           sizes.map((size, index) => (
@@ -271,8 +307,8 @@ const productionOrders = () => {
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3" controlId="quantity">
-                      <Form.Label>Quantity</Form.Label>
-                      <Form.Control type="number" placeholder="Enter quantity" disabled={edit} />
+                      <Form.Label>Quantity (Box)</Form.Label>
+                      <Form.Control type="number" placeholder="Enter quantity" disabled={true} />
                     </Form.Group>
                   </Col>
                 </Row>

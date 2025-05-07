@@ -44,7 +44,6 @@ const WarehouseInventory = () => {
                       <th>Size</th>
                       <th>Total Pallets</th>
                       <th>Total Boxes</th>
-                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -63,9 +62,6 @@ const WarehouseInventory = () => {
                           <td>
                             <span className="feather icon-box me-2"></span>
                             <span>{item.total_bxes}</span>
-                          </td>
-                          <td>
-                            <span className={`badge ${item.production.status === 'In Stock' ? 'bg-success' : 'bg-danger'}`}>{item.production.status}</span>
                           </td>
                         </tr>
                       ))

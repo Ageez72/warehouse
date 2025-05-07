@@ -47,7 +47,7 @@ const CreateSalesOrders = () => {
 
         if (productID && sizeID && colorID && quantity) {
             const newOrderItem = {
-                id: orderSummary.length + 1,
+                id: productID,
                 name: products.find(product => product.id === parseInt(productID)).name,
                 size: sizes.find(size => size.id === parseInt(sizeID)).name,
                 color: colors.find(color => color.id === parseInt(colorID)).name,
@@ -167,7 +167,7 @@ const CreateSalesOrders = () => {
                                                         </Col>
                                                         <Col md={6}>
                                                             <Form.Group className="mb-3" controlId="quantity">
-                                                                <Form.Label>Quantity</Form.Label>
+                                                                <Form.Label>Quantity (Box)</Form.Label>
                                                                 <Form.Control type="text" placeholder="Quantity" />
                                                             </Form.Group>
                                                         </Col>

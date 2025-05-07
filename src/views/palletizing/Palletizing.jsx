@@ -1,16 +1,22 @@
 import React, { useRef, useState, useEffect } from 'react';
 import QRCodeImage from 'components/QRCodeImage/QRCodeImage';
-import { Row, Col, Card, Table, Form, Button } from 'react-bootstrap';
+import { Row, Col, Card, Table, Form, Button, Modal  } from 'react-bootstrap';
 import axios from 'axios';
 import { BASE_URL } from 'config/constant';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const Palletizing = () => {
   const qrRef = useRef();
+  const [showDelete, setShowDelete] = useState(false);
   const [orderType, setOrderType] = useState("Production Order");
+  const [salesOrdersList, setSalesOrdersList] = useState([]);
   const [palletizingList, setPalletizingList] = useState([]);
   const [productionOrders, setProductionOrders] = useState([]);
+  const [prodOrderDetails, setProdOrderDetails] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [lines, setLines] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const token = localStorage.getItem('token');
   const config = {
@@ -22,18 +28,20 @@ const Palletizing = () => {
 
   const getPalletizingList = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}pallets `, config);
-      setPalletizingList(response.data.data);
+      const palletsResponse = await axios.get(`${BASE_URL}pallets `, config);
+
+      setPalletizingList(palletsResponse.data.data);
     } catch (error) {
       console.error('Error fetching Palletizing List:', error);
     }
   };
-  const getProductionOrders = async () => {
+  const getOrderList = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}productions `, config);
-      setProductionOrders(response.data.data);
+      const salesOrdersResponse = await axios.get(`${BASE_URL}orders`, config);
+
+      setSalesOrdersList(salesOrdersResponse.data.data.data);
     } catch (error) {
-      console.error('Error fetching Production Orders List:', error);
+      console.error('Error fetching Palletizing List:', error);
     }
   };
   const getWarehouses = async () => {
@@ -46,7 +54,7 @@ const Palletizing = () => {
   };
   const getLines = async (id) => {
     try {
-      const response = await axios.get(`${BASE_URL}lines?warehouse=${id}`, config);
+      const response = await axios.get(`${BASE_URL}lines?warehouse_id=${id}`, config);
       setLines(response.data.data);
     } catch (error) {
       console.error('Error fetching getLines:', error);
@@ -55,21 +63,10 @@ const Palletizing = () => {
 
   useEffect(() => {
     getPalletizingList();
-    getProductionOrders();
+    getOrderList();
+    // getProductionOrders();
     getWarehouses();
   }, []);
-
-  const handleDownload = async () => {
-    const dataUrl = qrRef.current?.getQRCodeUrl();
-    console.log(dataUrl);
-
-    if (dataUrl) {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = 'pallet-qr-code.png';
-      a.click();
-    }
-  };
 
   const handleCreatePallet = async () => {
     const palletData = {
@@ -89,6 +86,41 @@ const Palletizing = () => {
       console.error('Error creating pallet:', error);
     }
   }
+
+  const getSalesOrdersProducts = async (id) => {
+    try {
+      const response = await axios.get(`${BASE_URL}productions?order_id=${id}`, config);
+      setProductionOrders(response.data.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setProductionOrders([]);
+    }
+  };
+
+  const getProductionOrderInfo = async (id) => {
+    try {
+      const response = await axios.get(`${BASE_URL}productions/${id}`, config);
+      console.log(response.data.data);
+
+      setProdOrderDetails([response.data.data]);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const handleDeleteClose = () => setShowDelete(false);
+  const handleDeleteShow = () => setShowDelete(true);
+
+    const handleDeleteProductionOrder = async () => {
+      try {
+        await axios.delete(`${BASE_URL}pallets/${selectedOrder.id}`, config);
+        palletizingList(salesOrdersProducts.filter(order => order.id !== selectedOrder.order.id));
+        handleDeleteClose();
+      } catch (err) {
+        console.error('Error deleting order:', err);
+      }
+    }
+
   return (
     <React.Fragment>
       <Row>
@@ -120,19 +152,65 @@ const Palletizing = () => {
                   />
                 </Form.Group>
                 {orderType === "Production Order" && (
-                  <Form.Group className="select-group mb-3" controlId="productionOrder">
-                    <Form.Label>Production Order</Form.Label>
-                    <Form.Control as="select">
-                      <option value="">Select Production Order</option>
-                      {productionOrders.map((item, index) => (
-                        <option key={index} value={item.id}>{item.order.code}</option>
-                      ))}
-                    </Form.Control>
-                  </Form.Group>
+                  <>
+                    <Form.Group className="select-group mb-3" controlId="salesOrder">
+                      <Form.Label>Sales Order</Form.Label>
+                      <Form.Control as="select" onChange={(e) => getSalesOrdersProducts(e.target.value)}>
+                        <option value="">Select Sales Order</option>
+                        {
+                          salesOrdersList?.map((order, index) => (
+                            <option key={index} value={order.id}>{order.code}</option>
+                          ))
+                        }
+                      </Form.Control>
+                    </Form.Group>
+                    <Form.Group className="select-group mb-3" controlId="productionOrder">
+                      <Form.Label>Production Order</Form.Label>
+                      <Form.Control as="select"
+                        onChange={(e) => {
+                          getProductionOrderInfo(e.target.value);
+                        }}
+                      >
+                        <option value="">Select Production Order</option>
+                        {
+                          productionOrders.map((product, index) => (
+                            <option
+                              key={index}
+                              value={product.id}
+                            >
+                              {product.product.name}
+                            </option>
+                          ))
+                        }
+                      </Form.Control>
+                    </Form.Group>
+                    <Table responsive hover>
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Size</th>
+                          <th>Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {prodOrderDetails.length > 0 ? prodOrderDetails.map((item, index) => (
+                          <tr key={index}>
+                            <td>{item.code}</td>
+                            <td>{item.size.name}</td>
+                            <td>{item.quantity}</td>
+                          </tr>
+                        )) : (
+                          <tr>
+                            <td colSpan="6" className="text-center">No data available</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </>
                 )}
                 <Form.Group className="mb-3" controlId="palletCapacity">
                   <Form.Label>Pallet Capacity</Form.Label>
-                  <Form.Control type="number" placeholder="Enter Pallet Capacity" max={20}/>
+                  <Form.Control type="number" placeholder="Enter Pallet Capacity" max={20} />
                   <p className='mt-1'>Standard capacity for this product: 20 boxes</p>
                 </Form.Group>
                 <Row>
@@ -171,7 +249,7 @@ const Palletizing = () => {
                     {
                       lines.map((item, index) => (
                         <option key={index} value={item.id}>{item.name}</option>
-                      ))  
+                      ))
                     }
                   </Form.Control>
                 </Form.Group>
@@ -191,39 +269,100 @@ const Palletizing = () => {
               <Card.Title as="h5">Created Pallets</Card.Title>
             </Card.Header>
             <Card.Body>
-              <Table responsive hover>
+              <Table responsive hover className='pallets-table'>
                 <thead>
                   <tr>
                     <th>Pallet ID</th>
                     <th>Boxes</th>
                     <th>Label</th>
                     <th>Print</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {
-                    palletizingList.map((item, index) => (
+                  {palletizingList?.map((item, index) => {
+
+                    const handleDownload = async () => {
+                      const canvas = await html2canvas(qrRef.current);
+                      const imgData = canvas.toDataURL('image/png');
+
+                      const pdf = new jsPDF();
+                      pdf.addImage(imgData, 'PNG', 30, 20, 150, 150);
+
+                      // Add text under the QR code
+                      pdf.setFontSize(14);
+                      pdf.text(`Sales Order: ${item.order.code}`, 20, 180);
+                      pdf.text(`Boxes: ${item.quantity}`, 130, 180);
+                      pdf.text(`Pallet ID: ${item.code}`, 20, 190);
+                      pdf.text(`Warehouse to: ${item.warehouse_to.name}`, 130, 190);
+                      pdf.text(`Date: ${item.created_at}`, 20, 200);
+                      pdf.text(`Product: ${item.product.name}`, 130, 200);
+                      // pdf.text(`Variants: ${item.quantity}`, 20, 210);
+
+                      pdf.save(`${item.code}.pdf`);
+                    };
+
+                    return (
                       <tr key={index}>
                         <th scope="row">{item.code}</th>
                         <td>{item.quantity}</td>
                         <td>
-                          <QRCodeImage ref={qrRef} value={item.qr_code} size={60} />
+                          <QRCodeImage value={item.qr_code} size={60} />
+                          <div ref={qrRef}
+                            style={{
+                              width: '250px',
+                              height: '250px',
+                              border: '2px solid #000',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              margin: '0 auto',
+                              position: 'absolute',
+                              left: '-9999px',
+                            }}
+                          >
+                            <QRCodeImage value={item.qr_code} size={300} />
+                          </div>
                         </td>
                         <td>
                           <a onClick={handleDownload} style={{ cursor: 'pointer' }}>
-                            <span className='feather icon-printer me-2'></span>
+                            <span className="feather icon-printer me-2"></span>
                             Print
                           </a>
                         </td>
+                        <td>
+                          <div className="d-flex gap-2 actions-btns">
+                            <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(item) }}></span>
+                          </div>
+                        </td>
                       </tr>
-                    ))
-                  }
+                    );
+                  })}
                 </tbody>
               </Table>
             </Card.Body>
           </Card>
         </Col>
       </Row>
+      <Modal show={showDelete} onHide={handleDeleteClose} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete User</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Are you sure you want to delete this Pallet?
+          </p>
+          <strong className='danger-txt' style={{ fontWeight: `700` }}>Note:</strong> This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleDeleteClose}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteProductionOrder}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </React.Fragment>
   );
 };

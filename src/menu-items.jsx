@@ -160,7 +160,7 @@
 // }
 
 const menuItems = {
-  items:  [
+  items: [
     {
       id: 'navigation',
       title: 'Navigation',
@@ -173,6 +173,20 @@ const menuItems = {
           type: 'item',
           icon: 'feather icon-home',
           url: '/dashboard'
+        },
+        {
+          id: 'sales-orders',
+          title: 'Sales Orders',
+          type: 'item',
+          icon: 'feather icon-shopping-cart',
+          url: '/sales-orders'
+        },
+        {
+          id: 'create-sales-orders',
+          title: 'Create Sales Orders',
+          type: 'item',
+          icon: 'feather icon-shopping-cart',
+          url: '/create-sales-order'
         },
         {
           id: 'production-orders',
@@ -203,20 +217,6 @@ const menuItems = {
           url: '/loading-checkpoint'
         },
         {
-          id: 'sales-orders',
-          title: 'Sales Orders',
-          type: 'item',
-          icon: 'feather icon-shopping-cart',
-          url: '/sales-orders'
-        },
-        {
-          id: 'create-sales-orders',
-          title: 'Create Sales Orders',
-          type: 'item',
-          icon: 'feather icon-shopping-cart',
-          url: '/create-sales-order'
-        },
-        {
           id: 'warehouse-inventory',
           title: 'Warehouse Inventory',
           type: 'item',
@@ -240,14 +240,21 @@ const menuItems = {
             {
               id: 'users',
               title: 'Users',
-              type: 'item',
-              url: '/users'
-            },
-            {
-              id: 'roles',
-              title: 'Roles',
-              type: 'item',
-              url: '/roles'
+              type: 'collapse',
+              children: [
+                {
+                  id: 'roles',
+                  title: 'Add User',
+                  type: 'item',
+                  url: '/users'
+                },
+                {
+                  id: 'roles',
+                  title: 'Roles',
+                  type: 'item',
+                  url: '/roles'
+                },
+              ]
             },
             {
               id: 'customers',
@@ -256,34 +263,48 @@ const menuItems = {
               url: '/customers'
             },
             {
-              id: 'warehouses',
-              title: 'Warehouses',
-              type: 'item',
-              url: '/warehouses'
-            },
-            {
               id: 'line',
-              title: 'Line',
-              type: 'item',
-              url: '/line'
+              title: 'Lines',
+              type: 'collapse',
+              children: [
+                {
+                  id: 'line',
+                  title: 'Line',
+                  type: 'item',
+                  url: '/line'
+                },
+                {
+                  id: 'warehouses',
+                  title: 'Warehouses',
+                  type: 'item',
+                  url: '/warehouses'
+                },
+              ]
             },
             {
               id: 'products',
               title: 'Products',
-              type: 'item',
-              url: '/products'
-            },
-            {
-              id: 'sizes',
-              title: 'Size',
-              type: 'item',
-              url: '/size'
-            },
-            {
-              id: 'color',
-              title: 'Color',
-              type: 'item',
-              url: '/color'
+              type: 'collapse',
+              children: [
+                {
+                  id: 'products',
+                  title: 'Product',
+                  type: 'item',
+                  url: '/products'
+                },
+                {
+                  id: 'sizes',
+                  title: 'Size',
+                  type: 'item',
+                  url: '/size'
+                },
+                {
+                  id: 'color',
+                  title: 'Color',
+                  type: 'item',
+                  url: '/color'
+                },
+              ]
             },
             {
               id: 'priority',

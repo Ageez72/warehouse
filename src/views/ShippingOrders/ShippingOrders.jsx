@@ -134,7 +134,7 @@ const ShippingOrders = () => {
           <tbody>
             {list.length > 0 ? list.map((item, index) => (
               <tr key={index}>
-                <th scope="row">{item.order_id}</th>
+                <th scope="row">{item.order.code}</th>
                 <td>{item.customer.name}</td>
                 <td>{item.time}</td>
                 <td>{item.name}</td>

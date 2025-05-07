@@ -5,9 +5,9 @@ import axios from 'axios';
 import { Row, Col, Card, Table, Button, Modal, Form, Pagination } from 'react-bootstrap';
 
 const SalesOrders = () => {
-  const [showAdd, setShowAdd] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
-  const [edit, setEdit] = useState(false);
+  const [viewedDetails, setViewedDetails] = useState(false);
   const [salesOrdersList, setSalesOrdersList] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -46,14 +46,13 @@ const SalesOrders = () => {
     getSalesOrders();
   }, []);
 
-  const handleAddShow = (editSatus) => {
-    setShowAdd(true);
-    setEdit(editSatus);
+  const handleAddShow = (order) => {
+    setShowDetails(true);    
+    setViewedDetails(order)
   };
 
   const handleAddClose = () => {
-    setShowAdd(false);
-    setEdit(false);
+    setShowDetails(false);
   };
 
   const handleDeleteClose = () => setShowDelete(false);
@@ -125,7 +124,7 @@ const SalesOrders = () => {
                   {
                     salesOrdersList?.map((order, idx) => (
                       <tr key={order.id}>
-                        <th scope="row">{order.id}</th>
+                        <th scope="row">{order.code}</th>
                         <td>{order.customer.name}</td>
                         <td>{order.products.length}</td>
                         <td>
@@ -133,7 +132,7 @@ const SalesOrders = () => {
                         </td>
                         <td>
                           <div className="d-flex gap-2 actions-btns">
-                            {/* <span className="feather icon-edit edit" onClick={() => handleAddShow(true)}></span> */}
+                            <span className="feather icon-eye view" onClick={() => handleAddShow(order)}></span>
                             <span className="feather icon-trash-2 delete" onClick={() => handleDeleteShow(order.id)}></span>
                           </div>
                         </td>
@@ -164,134 +163,39 @@ const SalesOrders = () => {
         </Col>
       </Row>
 
-      <Modal show={showAdd} onHide={handleAddClose} centered size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>{edit ? "Edit" : "Create"} Sales Order</Modal.Title>
-        </Modal.Header>
+      <Modal show={showDetails} onHide={handleAddClose} centered size="xl">
         <Modal.Body>
-          <p className='mb-3'>Create a new sales order by selecting products and customer details</p>
-          <Form>
             <Row>
-              <Col md={6}>
+              <Col md={12}>
                 <Card>
                   <Card.Body className='p-3 pb-0'>
-                    <h5>Customer Information</h5>
-                    <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
-                      <Form.Label>Select Customer</Form.Label>
-                      <Form.Control as="select">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                        <option>4</option>
-                        <option>5</option>
-                      </Form.Control>
-                    </Form.Group>
-                  </Card.Body>
-                </Card>
-
-                <Card>
-                  <Card.Body className='p-3'>
-                    <h5>Add Products</h5>
-                    <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
-                      <Form.Label>Product Name</Form.Label>
-                      <Form.Control as="select">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                        <option>4</option>
-                        <option>5</option>
-                      </Form.Control>
-                    </Form.Group>
-                    <Row>
-                      <Col md={6}>
-                        <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
-                          <Form.Label>Size</Form.Label>
-                          <Form.Control as="select">
-                            <option>1</option>
-                            <option>2</option>
-                            <option>3</option>
-                            <option>4</option>
-                            <option>5</option>
-                          </Form.Control>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group className="select-group mb-3" controlId="exampleForm.roleID">
-                          <Form.Label>Color</Form.Label>
-                          <Form.Control as="select">
-                            <option>1</option>
-                            <option>2</option>
-                            <option>3</option>
-                            <option>4</option>
-                            <option>5</option>
-                          </Form.Control>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group className="mb-3" controlId="formBasicPassword">
-                          <Form.Label>Quantity</Form.Label>
-                          <Form.Control type="text" placeholder="Quantity" />
-                        </Form.Group>
-                      </Col>
-                      <Col md={12}>
-                        <Button className='w-100' variant="primary" onClick={handleAddClose}>
-                          <span className='feather icon-plus me-2'></span>
-                          Add to Order
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col md={6}>
-                <Card>
-                  <Card.Body className='p-3 pb-0'>
-                    <h5>Order Summary</h5>
+                    <h5>Sales Order Summary</h5>
                     <Table responsive hover>
                       <thead>
                         <tr>
                           <th>Product</th>
                           <th>Size</th>
                           <th>Qty</th>
-                          <th>Actions</th>
+                          <th>Color</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <th scope="row">Product A</th>
-                          <td>Medium</td>
-                          <td>2</td>
-                          <td>
-                            <div className="d-flex gap-2 actions-btns">
-                              <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
-                            </div>
-                          </td>
-                        </tr>
+                      {
+                    viewedDetails?.products?.map((prod, idx) => (
+                      <tr key={prod.id}>
+                        <th scope="row">{prod.product.name}</th>
+                        <td>{prod.size.name}</td>
+                        <td>{prod.quantity}</td>
+                        <td>{prod.color.name}</td>
+                      </tr>
+                    ))
+                  }
                       </tbody>
                     </Table>
                   </Card.Body>
                 </Card>
-                <Card>
-                  <Card.Body className='p-3'>
-                    <Row className='justify-content-between'>
-                      <Col md={6}>
-                        <p className='mb-0 dark-txt'>Total Items:</p>
-                      </Col>
-                      <Col className='text-end' md={6}>
-                        <b className='dark-txt'>5</b>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-                <Col>
-                  <Button className='w-100' variant="success" onClick={handleAddClose}>
-                    <span className='feather icon-plus me-2'></span>
-                    Add to Order
-                  </Button>
-                </Col>
               </Col>
             </Row>
-          </Form>
         </Modal.Body>
       </Modal>
 

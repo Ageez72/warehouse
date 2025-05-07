@@ -292,6 +292,10 @@ td {
     color: #f44236;
     cursor: pointer;
   }
+  .view {
+    color: #898787;
+    cursor: pointer;
+  }
 }
 
 .danger-txt {
@@ -515,9 +519,18 @@ td {
     margin-bottom: 10px;
     border-radius: 5px;
 
-    &.item-success {
+    &.item-danger {
       border: 1px solid transparent;
       background-color: #ECFDF5;
+
+      span {
+        font-size: 20px;
+        color: #065F46;
+      }
+    }
+    &.item-success {
+      border: 1px solid transparent;
+      background-color: rgb(235 120 131);
 
       span {
         font-size: 20px;
@@ -587,4 +600,7 @@ td {
     background-color: #2563EB;
     border-color: #2563EB;
   }
+}
+.text-bold {
+  font-weight: 700;
 }
