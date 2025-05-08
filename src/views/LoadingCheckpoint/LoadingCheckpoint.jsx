@@ -10,13 +10,16 @@ import {
   ListGroup,
   Alert,
   Form,
-  Table
+  Table,
+  Button
 } from 'react-bootstrap';
 import QrScanner from 'components/QrScanner/QrScanner';
 
 const LoadingCheckpoint = () => {
+  const [unLoadedPallets, setUnLoadedPallets] = useState([]);
   const [loadedPallets, setLoadedPallets] = useState([]);
   const [docksList, setDocksList] = useState([]);
+  const [docksTimeList, setDocksTimeList] = useState([]);
   const [selectedDock, setSelectedDock] = useState('dock1');
   const [scannedCode, setScannedCode] = useState('');
   const totalPallets = 12;
@@ -33,10 +36,11 @@ const LoadingCheckpoint = () => {
   const progressPercent = 0.5 * 100;
 
   const handleScan = (data) => {
+    console.log(data);
+    
     if (data && !loadedPallets.includes(data)) {
       setScannedCode(data);
       setLoadedPallets((prev) => [...prev, data]);
-      // setUnloadedPallets((prev) => prev.filter(p => p !== data));
       handleLoadingCheckpoint(data)
     }
   };
@@ -45,10 +49,9 @@ const LoadingCheckpoint = () => {
     try {
       const response = await axios.get(`${BASE_URL}checkpoint?qr_code=${code}`, config);
       if (response.status === 200) {
-        const responseCode = response.data.code;
-        if (responseCode) {
-          setLoadedPallets((prev) => [...prev, responseCode]);
-        }
+        const responseCode = response.data.data.code;
+        console.log(response.data.data.code);
+        setLoadedPallets((prev) => prev.filter(p => p !== responseCode))
       } else {
         alert('Failed to assign shipping!');
       }
@@ -62,7 +65,37 @@ const LoadingCheckpoint = () => {
     const fetchData = async () => {
       try {
         const docksRes = await axios.get(`${BASE_URL}docks?dock=${selectedDock}`, config);
+        const list = docksRes.data.data.all;
+        let dates = [];
+        for (let i = 0; i < list.length; i++) {
+          const el = list[i];
+          dates.push(el.time)
+        }
+        const now = new Date();
+
+        // Convert to Date objects
+        const parsedDates = dates.map(date => new Date(date.replace(' ', 'T')));
+
+        // Filter future dates and get the soonest one
+        const futureDates = parsedDates.filter(date => date > now);
+        const nextDate = futureDates.length > 0
+          ? futureDates.reduce((a, b) => a < b ? a : b)
+          : null;
+
+        // Map to booleans
+        const result = parsedDates.map(date => date.getTime() === nextDate?.getTime());
+        if (result.length > 0) {
+          result.map((el, i) => {
+            if (el === true) {
+              setUnLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "unloauded"));
+            }
+          })
+        } else {
+          setUnLoadedPallets([])
+        }
+        setDocksTimeList(result)
         setDocksList(docksRes.data.data.all);
+        // setLoadedPallets( setUnLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "loauded")))
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -73,6 +106,11 @@ const LoadingCheckpoint = () => {
   const handleDocks = (dock) => {
     setSelectedDock(dock);
   }
+
+  const getUnLoadedPallets = (item) => {
+    setUnLoadedPallets(item.order.pallets);
+  }
+  
 
   return (
     <Container className="my-4">
@@ -103,6 +141,7 @@ const LoadingCheckpoint = () => {
                     <th>Customer</th>
                     {/* <th>Pallet ID</th> */}
                     <th>Time</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -112,6 +151,8 @@ const LoadingCheckpoint = () => {
                       <td>{item.customer.name}</td>
                       {/* <td>{item.name}</td> */}
                       <td>{item.time}</td>
+                      {/* <td>{docksTimeList[index] ?<Button onClick={() => getUnLoadedPallets(item)}>Start</Button> : "" }</td> */}
+                      <td>{docksTimeList[index] ? <span className="badge bg-info">Next</span> : ""}</td>
                     </tr>
                   )) : (
                     <tr>
@@ -174,10 +215,9 @@ const LoadingCheckpoint = () => {
                   UnLoaded Pallets
                 </h6>
                 <ListGroup variant="flush">
-                  {loadedPallets.map((pallet, i) => (
+                  {unLoadedPallets.map((pallet, i) => (
                     <ListGroup.Item key={i} className="item-danger text-white">
-                      {pallet}
-                      <span className='feather icon-check'></span>
+                      {pallet.qr_code}
                     </ListGroup.Item>
                   ))}
                 </ListGroup>
@@ -187,7 +227,7 @@ const LoadingCheckpoint = () => {
                   <span className='feather icon-check-circle me-2'></span>
                   Loaded Pallets</h6>
                 <ListGroup variant="flush">
-                  {loadedPallets.map((pallet, i) => (
+                  {loadedPallets?.map((pallet, i) => (
                     <ListGroup.Item key={i} className="item-success text-white">
                       {pallet}
                       <span className='feather icon-check'></span>

@@ -1,10 +1,18 @@
 import React, { useRef, useState, useEffect } from 'react';
 import QRCodeImage from 'components/QRCodeImage/QRCodeImage';
-import { Row, Col, Card, Table, Form, Button, Modal  } from 'react-bootstrap';
+import { Row, Col, Card, Table, Form, Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import { BASE_URL } from 'config/constant';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { ToastContainer } from 'react-toastify';
+import { showToast } from 'components/ToastNotifier/ToastNotifier';
+
+const handleAdd = () => showToast('success', 'add');
+const handleDelete = () => showToast('delete', 'delete');
+const handleError = () => showToast('error', 'error');
+const handleSubmitError = () => showToast('submitError', 'submitError');
+const handleValidation = () => showToast('info', 'validation');
 
 const Palletizing = () => {
   const qrRef = useRef();
@@ -17,6 +25,15 @@ const Palletizing = () => {
   const [warehouses, setWarehouses] = useState([]);
   const [lines, setLines] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const [formData, setFormData] = useState({
+    salesOrder: "",
+    productionOrder: "",
+    palletCapacity: "",
+    warehouseFrom: "",
+    warehouseTo: "",
+    lineID: "",
+  });
 
   const token = localStorage.getItem('token');
   const config = {
@@ -69,21 +86,39 @@ const Palletizing = () => {
   }, []);
 
   const handleCreatePallet = async () => {
-    const palletData = {
-      // orderType,
-      production_id: orderType === "Production Order" ? document.getElementById('productionOrder').value : null,
-      quantity: document.getElementById('palletCapacity').value,
-      warehouse_from_id: document.getElementById('warehouseFrom').value,
-      warehouse_to_id: document.getElementById('warehouseTo').value,
-      line_id: document.getElementById('lineID').value
-    };
+    let palletData;
+    if (orderType === "Production Order") {
+      palletData = {
+        production_id: document.getElementById('productionOrder').value,
+        quantity: document.getElementById('palletCapacity').value,
+        warehouse_from_id: document.getElementById('warehouseFrom').value,
+        warehouse_to_id: document.getElementById('warehouseTo').value,
+        line_id: document.getElementById('lineID').value
+      };
+    } else {
+      palletData = {
+        quantity: document.getElementById('palletCapacity').value,
+        warehouse_from_id: document.getElementById('warehouseFrom').value,
+        warehouse_to_id: document.getElementById('warehouseTo').value,
+        line_id: document.getElementById('lineID').value
+      };
+    }
+
+    // Check if all required fields are filled
+    for (let key in palletData) {
+      if (!palletData[key]) {
+        handleValidation()
+        return;
+      }
+    }
 
     try {
       const response = await axios.post(`${BASE_URL}pallets`, palletData, config);
-      console.log(response.data);
+      handleAdd()
+      resetForm();
       getPalletizingList();
     } catch (error) {
-      console.error('Error creating pallet:', error);
+      handleSubmitError()
     }
   }
 
@@ -100,29 +135,45 @@ const Palletizing = () => {
   const getProductionOrderInfo = async (id) => {
     try {
       const response = await axios.get(`${BASE_URL}productions/${id}`, config);
-      console.log(response.data.data);
-
       setProdOrderDetails([response.data.data]);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      setProdOrderDetails([])
+      // handleError();
     }
   };
 
   const handleDeleteClose = () => setShowDelete(false);
   const handleDeleteShow = () => setShowDelete(true);
 
-    const handleDeleteProductionOrder = async () => {
-      try {
-        await axios.delete(`${BASE_URL}pallets/${selectedOrder.id}`, config);
-        palletizingList(salesOrdersProducts.filter(order => order.id !== selectedOrder.order.id));
-        handleDeleteClose();
-      } catch (err) {
-        console.error('Error deleting order:', err);
-      }
+  const handleDeleteProductionOrder = async () => {
+    try {
+      await axios.delete(`${BASE_URL}pallets/${selectedOrder.id}`, config);
+      setPalletizingList(palletizingList.filter(order => order.id !== selectedOrder.id));
+      handleDeleteClose();
+      handleDelete()
+    } catch (err) {
+      handleError()
     }
+  }
+  const resetForm = () => {
+    document.getElementById('salesOrder').value = "";
+    document.getElementById('productionOrder').value = "";
+    document.getElementById('palletCapacity').value = "";
+    document.getElementById('warehouseFrom').value = "";
+    document.getElementById('warehouseTo').value = "";
+    document.getElementById('lineID').value = "";
+    setOrderType("Production Order");
+    setProdOrderDetails([]);
+    setProductionOrders([]);
+    setLines([]);
+  }
+
+  console.log(formData);
+
 
   return (
     <React.Fragment>
+      <ToastContainer />
       <Row>
         <Col md={6} className="mb-3">
           <Card>
@@ -155,7 +206,10 @@ const Palletizing = () => {
                   <>
                     <Form.Group className="select-group mb-3" controlId="salesOrder">
                       <Form.Label>Sales Order</Form.Label>
-                      <Form.Control as="select" onChange={(e) => getSalesOrdersProducts(e.target.value)}>
+                      <Form.Control as="select" onChange={(e) => {
+                        getSalesOrdersProducts(e.target.value)
+                        setFormData({ ...formData, salesOrder: e.target.value })
+                      }} value={formData.salesOrder}>
                         <option value="">Select Sales Order</option>
                         {
                           salesOrdersList?.map((order, index) => (
@@ -166,8 +220,9 @@ const Palletizing = () => {
                     </Form.Group>
                     <Form.Group className="select-group mb-3" controlId="productionOrder">
                       <Form.Label>Production Order</Form.Label>
-                      <Form.Control as="select"
+                      <Form.Control as="select" value={formData.productionOrder}
                         onChange={(e) => {
+                          setFormData({ ...formData, productionOrder: e.target.value })
                           getProductionOrderInfo(e.target.value);
                         }}
                       >
@@ -184,33 +239,37 @@ const Palletizing = () => {
                         }
                       </Form.Control>
                     </Form.Group>
-                    <Table responsive hover>
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Size</th>
-                          <th>Qty</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {prodOrderDetails.length > 0 ? prodOrderDetails.map((item, index) => (
-                          <tr key={index}>
-                            <td>{item.code}</td>
-                            <td>{item.size.name}</td>
-                            <td>{item.quantity}</td>
-                          </tr>
-                        )) : (
-                          <tr>
-                            <td colSpan="6" className="text-center">No data available</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </Table>
+                    {
+                      prodOrderDetails.length > 0 && (
+                        <Table responsive hover>
+                          <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>Size</th>
+                              <th>Qty</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {prodOrderDetails.length > 0 ? prodOrderDetails.map((item, index) => (
+                              <tr key={index}>
+                                <td>{item.code}</td>
+                                <td>{item.size.name}</td>
+                                <td>{item.quantity}</td>
+                              </tr>
+                            )) : (
+                              <tr>
+                                <td colSpan="6" className="text-center">No data available</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </Table>
+                      )
+                    }
                   </>
                 )}
                 <Form.Group className="mb-3" controlId="palletCapacity">
                   <Form.Label>Pallet Capacity</Form.Label>
-                  <Form.Control type="number" placeholder="Enter Pallet Capacity" max={20} />
+                  <Form.Control type="number" placeholder="Enter Pallet Capacity" />
                   <p className='mt-1'>Standard capacity for this product: 20 boxes</p>
                 </Form.Group>
                 <Row>
@@ -280,64 +339,72 @@ const Palletizing = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {palletizingList?.map((item, index) => {
+                  {
+                    palletizingList.length > 0 ? (
+                      palletizingList?.map((item, index) => {
 
-                    const handleDownload = async () => {
-                      const canvas = await html2canvas(qrRef.current);
-                      const imgData = canvas.toDataURL('image/png');
+                        const handleDownload = async () => {
+                          const canvas = await html2canvas(qrRef.current);
+                          const imgData = canvas.toDataURL('image/png');
 
-                      const pdf = new jsPDF();
-                      pdf.addImage(imgData, 'PNG', 30, 20, 150, 150);
+                          const pdf = new jsPDF();
+                          pdf.addImage(imgData, 'PNG', 30, 20, 150, 150);
 
-                      // Add text under the QR code
-                      pdf.setFontSize(14);
-                      pdf.text(`Sales Order: ${item.order.code}`, 20, 180);
-                      pdf.text(`Boxes: ${item.quantity}`, 130, 180);
-                      pdf.text(`Pallet ID: ${item.code}`, 20, 190);
-                      pdf.text(`Warehouse to: ${item.warehouse_to.name}`, 130, 190);
-                      pdf.text(`Date: ${item.created_at}`, 20, 200);
-                      pdf.text(`Product: ${item.product.name}`, 130, 200);
-                      // pdf.text(`Variants: ${item.quantity}`, 20, 210);
+                          // Add text under the QR code
+                          pdf.setFontSize(14);
+                          pdf.text(`Sales Order: ${item.order.code}`, 20, 180);
+                          pdf.text(`Boxes: ${item.quantity}`, 130, 180);
+                          pdf.text(`Pallet ID: ${item.code}`, 20, 190);
+                          pdf.text(`Warehouse to: ${item.warehouse_to.name}`, 130, 190);
+                          pdf.text(`Date: ${item.created_at}`, 20, 200);
+                          pdf.text(`Product: ${item.product.name}`, 130, 200);
+                          // pdf.text(`Variants: ${item.quantity}`, 20, 210);
 
-                      pdf.save(`${item.code}.pdf`);
-                    };
+                          pdf.save(`${item.code}.pdf`);
+                        };
 
-                    return (
-                      <tr key={index}>
-                        <th scope="row">{item.code}</th>
-                        <td>{item.quantity}</td>
-                        <td>
-                          <QRCodeImage value={item.qr_code} size={60} />
-                          <div ref={qrRef}
-                            style={{
-                              width: '250px',
-                              height: '250px',
-                              border: '2px solid #000',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              margin: '0 auto',
-                              position: 'absolute',
-                              left: '-9999px',
-                            }}
-                          >
-                            <QRCodeImage value={item.qr_code} size={300} />
-                          </div>
-                        </td>
-                        <td>
-                          <a onClick={handleDownload} style={{ cursor: 'pointer' }}>
-                            <span className="feather icon-printer me-2"></span>
-                            Print
-                          </a>
-                        </td>
-                        <td>
-                          <div className="d-flex gap-2 actions-btns">
-                            <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(item) }}></span>
-                          </div>
-                        </td>
+                        return (
+                          <tr key={index}>
+                            <th scope="row">{item.code}</th>
+                            <td>{item.quantity}</td>
+                            <td>
+                              <QRCodeImage value={item.qr_code} size={60} />
+                              <div ref={qrRef}
+                                style={{
+                                  width: '250px',
+                                  height: '250px',
+                                  border: '2px solid #000',
+                                  display: 'flex',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  margin: '0 auto',
+                                  position: 'absolute',
+                                  left: '-9999px',
+                                }}
+                              >
+                                <QRCodeImage value={item.qr_code} size={300} />
+                              </div>
+                            </td>
+                            <td>
+                              <a onClick={handleDownload} style={{ cursor: 'pointer' }}>
+                                <span className="feather icon-printer me-2"></span>
+                                Print
+                              </a>
+                            </td>
+                            <td>
+                              <div className="d-flex gap-2 actions-btns">
+                                <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(item) }}></span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center">No data available</td>
                       </tr>
-                    );
-                  })}
+                    )
+                  }
                 </tbody>
               </Table>
             </Card.Body>

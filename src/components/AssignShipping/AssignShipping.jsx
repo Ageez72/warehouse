@@ -1,14 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { BASE_URL } from 'config/constant';
 import { Row, Col, Form, Button } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { ToastContainer } from 'react-toastify';
+import { showToast } from 'components/ToastNotifier/ToastNotifier';
+
+const handleAdd = () => showToast('success', 'add');
+const handleSubmitError = () => showToast('submitError', 'submitError');
+const handleValidation = () => showToast('info', 'validation');
 
 const AssignShipping = ({ list, onAssign }) => {
-    const [salesOrder, setSalesOrder] = useState(null);
-    const [dockNumber, setDockNumber] = useState(null);
+    const [salesOrder, setSalesOrder] = useState("");
+    const [dockNumber, setDockNumber] = useState("");
     const [scheduleTime, setScheduleTime] = useState(null);
+
+    const resetForm = () => {
+        setSalesOrder("")
+        setDockNumber("")
+        setScheduleTime(null)
+    }
 
     function formatToYMDHI(isoString) {
         const date = new Date(isoString);
@@ -31,6 +43,11 @@ const AssignShipping = ({ list, onAssign }) => {
     };
 
     const handleAssignShipping = async () => {
+
+        if(!salesOrder || !dockNumber || !scheduleTime){
+            handleValidation();
+            return;
+        }
         const data = {
             order_id: salesOrder,
             name: dockNumber,
@@ -40,22 +57,24 @@ const AssignShipping = ({ list, onAssign }) => {
             const response = await axios.post(`${BASE_URL}docks`, data, config);
             if (response.status === 200) {
                 onAssign();
+                handleAdd()
+                resetForm()
             } else {
-                alert('Failed to assign shipping!');
+                handleSubmitError()
             }
         } catch (error) {
-            console.error('Error assigning shipping:', error);
-            alert('Error assigning shipping!');
+            handleSubmitError()
         }
     }
 
     return (
+        <>
         <Form className="dock-form">
             <Row className='align-items-end'>
                 <Col md={3}>
                     <Form.Group className="select-group mb-3" controlId="salesOrder">
                         <Form.Label>Sales Order</Form.Label>
-                        <Form.Control as="select" onChange={(e) => setSalesOrder(e.target.value)}>
+                        <Form.Control as="select" value={salesOrder} onChange={(e) => setSalesOrder(e.target.value)}>
                             <option>Select Sales Order</option>
                             {
                                 list?.data?.map((item, index) => (
@@ -68,7 +87,7 @@ const AssignShipping = ({ list, onAssign }) => {
                 <Col md={3}>
                     <Form.Group className="select-group mb-3" controlId="loadingDock">
                         <Form.Label>Loading Dock</Form.Label>
-                        <Form.Control as="select" onChange={(e) => setDockNumber(e.target.value)}>
+                        <Form.Control as="select" value={dockNumber} onChange={(e) => setDockNumber(e.target.value)}>
                             <option value="">Select Dock</option>
                             <option value="dock1">Dock 1</option>
                             <option value="dock2">Dock 2</option>
@@ -98,6 +117,9 @@ const AssignShipping = ({ list, onAssign }) => {
                 </Col>
             </Row>
         </Form>
+
+        <ToastContainer/>
+        </>
     );
 }
 

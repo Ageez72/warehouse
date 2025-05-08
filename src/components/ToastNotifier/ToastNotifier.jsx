@@ -10,6 +10,7 @@ export const showToast = (type, action) => {
     validation: "Please fill all fields",
     updateError: "Update item has faild",
     createError: "Create item has faild",
+    submitError: 'Error Submitting Data',
   };
 
   const options = {
@@ -32,18 +33,21 @@ export const showToast = (type, action) => {
       toast.error(messages[action], options);
       break;
     case 'error':
-        toast.error(messages[action], options);
-        break
+      toast.error(messages[action], options);
+      break
+    case 'submitError':
+      toast.error(messages[action], options);
+      break
     case 'info':
-        toast.warn(messages[action], options);
+      toast.warn(messages[action], options);
       break;
     case 'updateError':
-        toast.error(messages[action], options);
+      toast.error(messages[action], options);
       break;
     case 'createError':
-        toast.error(messages[action], options);
+      toast.error(messages[action], options);
       break;
     default:
-      toast.info('Action executed.', options);
+      toast.error('Action executed.', options);
   }
 };

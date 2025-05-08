@@ -25,7 +25,7 @@ const productionOrders = () => {
   const [warehouses, setWarehouses] = useState([]);
   const [productionLine, setProductionLine] = useState([]);
   const [priorities, setPriorities] = useState([]);
-  const [productionOrdersList, setProductsOrdersList] = useState([]);
+  const [productionOrdersList, setProductionOrdersList] = useState([]);
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -105,7 +105,7 @@ const productionOrders = () => {
   const getProductsOrdersList = async () => {
     try {
       const response = await axios.get(`${BASE_URL}productions`, config);
-      setProductsOrdersList(response.data.data);
+      setProductionOrdersList(response.data.data);
     } catch (error) {
       handleError()
     }
@@ -119,23 +119,20 @@ const productionOrders = () => {
   }, []);
 
   function formatDate(dateTimeString) {
-    // Replace space with 'T' to make it a valid ISO string
-    const date = new Date(dateTimeString.replace(' ', 'T'));
-  
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-  
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-  
-    hours = hours % 12;
-    hours = hours ? hours : 12; // convert 0 to 12
-  
-    return `${year}/${month}/${day} ${hours}:${minutes} ${ampm}`;
+    const date = new Date(dateTimeString);
+    return date;
   }
-  
+
+  const resetForm = () => {
+    document.getElementById('salesOrder').value = "";
+    document.getElementById('product').value = "";
+    document.getElementById('size').value = "";
+    document.getElementById('quantity').value = "";
+    document.getElementById('warehouse').value = "";
+    document.getElementById('productionLine').value = "";
+    document.getElementById('priority').value = "";
+    document.getElementById('status')?.value;
+  }
 
   const handleCreateProductionOrder = () => {
     const salesOrder = document.getElementById('salesOrder').value;
@@ -146,29 +143,27 @@ const productionOrders = () => {
     const productionLine = document.getElementById('productionLine').value;
     const priority = document.getElementById('priority').value;
     const status = document.getElementById('status')?.value;
-    const startDateValue = startDate ? formatDate(startDate) : null;
-    const endDateValue = endDate ? formatDate(endDate) : null;
-    
+
     let data;
 
-    if(edit){
+    if (edit) {
+      const startDateValue = startDate ? formatDate(startDate) : null;
+      const endDateValue = endDate ? formatDate(endDate) : null;
       data = {
         status,
         start: formatDate(startDateValue),
         end: formatDate(endDateValue),
       };
-    }else {
+    } else {
       data = {
         order_id: salesOrder,
-        order_product_id: product &&  JSON?.parse(product).id,
+        order_product_id: product && JSON?.parse(product).id,
         size,
         quantity,
         warehouse_id: warehouse,
         line_id: productionLine,
         priority_id: priority,
         status,
-        start: formatDate(startDateValue),
-        end: formatDate(endDateValue),
       };
     }
 
@@ -176,12 +171,11 @@ const productionOrders = () => {
       data._method = "put";
     }
     if (!edit) {
-      if (!salesOrder || !product || !size || !quantity || !warehouse || !productionLine || !priority) {
+      if (!salesOrder || !product || !size || !quantity || !priority) {
         handleValidation()
         return;
       }
     }
-    console.log(editingOrder);
 
     if (edit && editingOrder) {
       axios.post(`${BASE_URL}productions/${editingOrder.id}`, data, config)
@@ -190,6 +184,7 @@ const productionOrders = () => {
           setEditingOrder(null);
           getProductsOrdersList();
           handleEdit()
+          resetForm()
         })
         .catch((error) => {
           handleUpdateError()
@@ -199,6 +194,7 @@ const productionOrders = () => {
         .then(() => {
           getProductsOrdersList();
           handleAdd()
+          resetForm()
         })
         .catch((error) => {
           handleCreateError()
@@ -207,14 +203,14 @@ const productionOrders = () => {
   };
 
 
-  const handleEditProductionOrder = (order) => {    
+  const handleEditProductionOrder = (order) => {
     setEdit(true);
     setEditingOrder(order);
 
     // Pre-fill the form manually (you might also consider controlled components for scalability)
     document.getElementById('salesOrder').value = order.order_id;
     getSalesOrdersProducts(order.order_id);
-    
+
     setTimeout(() => {
       document.getElementById('product').value = JSON.stringify({ product_id: order.product.id, id: order.order_product_id });
       getWarehouses(order.product.id);
@@ -237,8 +233,8 @@ const productionOrders = () => {
       document.getElementById('status').value = order.status;
     }, 300);
 
-    setStartDate(order.start ? formatDate(order.start): new Date());
-    setEndDate(order.end ? formatDate(order.end): new Date());
+    setStartDate(order.start ? formatDate(order.start) : new Date());
+    setEndDate(order.end ? formatDate(order.end) : new Date());
   };
 
 
@@ -247,10 +243,11 @@ const productionOrders = () => {
 
   const handleDeleteProductionOrder = async () => {
     console.log(selectedOrder);
-    
+
     try {
-      await axios.delete(`${BASE_URL}orders/${selectedOrder.order_id}`, config);
-      setSalesOrdersProducts(salesOrdersProducts.filter(order => order.id !== selectedOrder.order.id));
+      await axios.delete(`${BASE_URL}productions/${selectedOrder.id}`, config);
+      let filteredData = productionOrdersList.filter(order => order.id !== selectedOrder.id)
+      setProductionOrdersList(filteredData);
       handleDeleteClose();
       handleDelete()
     } catch (err) {
@@ -260,7 +257,7 @@ const productionOrders = () => {
 
   return (
     <React.Fragment>
-      <ToastContainer/>
+      <ToastContainer />
       <Row>
         <Col md={4}>
           <Card>
@@ -268,7 +265,7 @@ const productionOrders = () => {
               <Form>
                 <h5>New Production Order</h5>
                 <Form.Group className="select-group mb-3" controlId="salesOrder">
-                  <Form.Label>Sales Order</Form.Label>
+                  <Form.Label>Sales Order <span className='required'>*</span></Form.Label>
                   <Form.Control as="select" disabled={edit} onChange={(e) => getSalesOrdersProducts(e.target.value)}>
                     <option value="">Select Sales Order</option>
                     {
@@ -279,7 +276,7 @@ const productionOrders = () => {
                   </Form.Control>
                 </Form.Group>
                 <Form.Group className="select-group mb-3" controlId="product">
-                  <Form.Label>Product</Form.Label>
+                  <Form.Label>Product <span className='required'>*</span></Form.Label>
                   <Form.Control
                     as="select"
                     disabled={edit}
@@ -304,7 +301,7 @@ const productionOrders = () => {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="select-group mb-3" controlId="size">
-                      <Form.Label>Size</Form.Label>
+                      <Form.Label>Size <span className='required'>*</span></Form.Label>
                       <Form.Control as="select" disabled={true}>
                         <option value="">Select Size</option>
                         {
@@ -318,7 +315,7 @@ const productionOrders = () => {
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3" controlId="quantity">
-                      <Form.Label>Quantity (Box)</Form.Label>
+                      <Form.Label>Quantity (Box) <span className='required'>*</span></Form.Label>
                       <Form.Control type="number" placeholder="Enter quantity" disabled={true} />
                     </Form.Group>
                   </Col>
@@ -345,7 +342,7 @@ const productionOrders = () => {
                   </Form.Control>
                 </Form.Group>
                 <Form.Group className="select-group mb-3" controlId="priority">
-                  <Form.Label>Priority</Form.Label>
+                  <Form.Label>Priority <span className='required'>*</span></Form.Label>
                   <Form.Control as="select" disabled={edit}>
                     <option value="">Select Priority</option>
                     {
@@ -438,7 +435,7 @@ const productionOrders = () => {
                             <td>{order.size.name}</td>
                             <td>{order.quantity}</td>
                             <td>-</td>
-                            <td>{order.line.name}</td>
+                            <td>{order?.line?.name ? order?.line?.name : "-"}</td>
                             <td>
                               <div className="progress" style={{ height: '7px' }}>
                                 <div

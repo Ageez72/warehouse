@@ -3,6 +3,14 @@ import axios from 'axios';
 import { BASE_URL } from 'config/constant';
 import { Row, Col, Card, Table, Tabs, Tab, Modal, Button, Form } from 'react-bootstrap';
 import AssignShipping from 'components/AssignShipping/AssignShipping';
+import { ToastContainer } from 'react-toastify';
+import { showToast } from 'components/ToastNotifier/ToastNotifier';
+
+const handleAdd = () => showToast('success', 'add');
+const handleDelete = () => showToast('delete', 'delete');
+const handleError = () => showToast('error', 'error');
+const handleEditError = () => showToast('', '');
+const handleEdit = () => showToast('edit', 'edit');
 
 const ShippingOrders = () => {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,8 +81,9 @@ const ShippingOrders = () => {
       }, config);
       setShowEditModal(false);
       setRefreahData(prev => !prev); // trigger refresh
+      handleEdit()
     } catch (error) {
-      console.error('Error updating dock:', error);
+      handleEditError()
     }
   };
 
@@ -83,8 +92,9 @@ const ShippingOrders = () => {
       await axios.delete(`${BASE_URL}docks/${formData.id}`, config);
       setShowDeleteModal(false);
       setRefreahData(prev => !prev); // refresh data
+      handleDelete()
     } catch (error) {
-      console.error('Error deleting dock:', error);
+      handleEditError()
     }
   };
 
@@ -250,6 +260,7 @@ const ShippingOrders = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      <ToastContainer/>
     </>
   );
 };

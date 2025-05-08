@@ -521,7 +521,7 @@ td {
 
     &.item-danger {
       border: 1px solid transparent;
-      background-color: #ECFDF5;
+      background-color: #ebc3c3;
 
       span {
         font-size: 20px;
@@ -530,7 +530,7 @@ td {
     }
     &.item-success {
       border: 1px solid transparent;
-      background-color: rgb(235 120 131);
+      background-color: #d1e7dd;
 
       span {
         font-size: 20px;
@@ -608,4 +608,7 @@ td {
   color: #fff;
   background-color: #ccc;
   border-color: #ccc;
+}
+.required {
+  color: #f52011;
 }
