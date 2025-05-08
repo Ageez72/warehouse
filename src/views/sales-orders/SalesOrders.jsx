@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { BASE_URL } from 'config/constant';
 import axios from 'axios';
 import { Row, Col, Card, Table, Button, Modal, Form, Pagination } from 'react-bootstrap';
+import { ToastContainer } from 'react-toastify';
+import { showToast } from 'components/ToastNotifier/ToastNotifier';
+const handleDelete = () => showToast('delete', 'delete');
+const handleError = () => showToast('error', 'error');
 
 const SalesOrders = () => {
   const [showDetails, setShowDetails] = useState(false);
@@ -13,7 +17,6 @@ const SalesOrders = () => {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
-
 
   const token = localStorage.getItem('token');
   const config = {
@@ -30,6 +33,7 @@ const SalesOrders = () => {
       setLimit(res.data.data.meta.per_page);
       setPage(res.data.data.meta.current_page);
     } catch (err) {
+      handleError()
       console.error('Error fetching orders:', err);
     }
   };
@@ -67,8 +71,10 @@ const SalesOrders = () => {
       await axios.delete(`${BASE_URL}orders/${selectedOrderId}`, config);
       setSalesOrdersList(salesOrdersList.filter(order => order.id !== selectedOrderId));
       setShowDelete(false);
+      handleDelete()
     } catch (err) {
       console.error('Error deleting order:', err);
+      handleError()
     }
   };
 
@@ -97,6 +103,7 @@ const SalesOrders = () => {
 
   return (
     <React.Fragment>
+      <ToastContainer/>
       <Row>
         <Col>
           <Card>

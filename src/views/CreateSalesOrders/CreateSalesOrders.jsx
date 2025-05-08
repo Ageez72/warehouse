@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BASE_URL } from 'config/constant';
 import { Row, Col, Card, Table, Button, Form } from 'react-bootstrap';
+import { ToastContainer } from 'react-toastify';
+import { showToast } from 'components/ToastNotifier/ToastNotifier';
+const handleError = () => showToast('error', 'error');
+const handleValidation = () => showToast('info', 'validation');
 
 const CreateSalesOrders = () => {
     const [customers, setCustomers] = useState([]);
@@ -32,9 +36,9 @@ const CreateSalesOrders = () => {
             })
             .catch(error => {
                 if (error.response && error.response.status === 401) {
-                    console.error('User is not authenticated');
+                    handleError()
                 } else {
-                    console.error('There was an error fetching the data!', error);
+                    handleError()
                 }
             });
     }, []);
@@ -59,7 +63,7 @@ const CreateSalesOrders = () => {
             document.getElementById('colorID').value = 'Select Color';
             document.getElementById('quantity').value = '';
         } else {
-            alert('Please fill all fields before adding to order.');
+            handleValidation()
         }
     }
 
@@ -92,12 +96,13 @@ const CreateSalesOrders = () => {
             console.log('Sales Order submitted successfully:', res.data);
             window.location.href = '/sales-orders'; // Redirect to sales orders page
         } catch (err) {
-            console.error('Error fetching colors:', err);
+            handleError()
         }
     };
 
     return (
         <React.Fragment>
+            <ToastContainer />
             <Row>
                 <Col>
                     <Card>
@@ -168,7 +173,7 @@ const CreateSalesOrders = () => {
                                                         <Col md={6}>
                                                             <Form.Group className="mb-3" controlId="quantity">
                                                                 <Form.Label>Quantity (Box)</Form.Label>
-                                                                <Form.Control type="text" placeholder="Quantity" />
+                                                                <Form.Control type="number" placeholder="Quantity" />
                                                             </Form.Group>
                                                         </Col>
                                                         <Col md={12}>
@@ -226,7 +231,7 @@ const CreateSalesOrders = () => {
                                                 </Card.Body>
                                             </Card>
                                             <Col>
-                                                <Button className='w-100' variant="success" onClick={handleSubmitSalesOrder}>
+                                                <Button className='w-100' variant="success" disabled={orderSummary.length > 0 ? false : true} onClick={handleSubmitSalesOrder}>
                                                     <span className='feather icon-check me-2'></span>
                                                     Submit Sales Order
                                                 </Button>

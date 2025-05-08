@@ -1,32 +1,34 @@
-// BarChart.jsx
+// LineChart.jsx
 import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 
-// Register components
+// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend
 );
 
-const BarChart = ({ chartData, chartOptions }) => {
+const LineChart = ({ chartData, chartOptions }) => {
   return (
     <div className="w-full max-w-md mx-auto" style={{ minHeight: '400px' }}>
-      <Bar data={chartData} options={chartOptions} />
+      <Line data={chartData} options={chartOptions} />
     </div>
   );
 };
 
-export default BarChart;
+export default LineChart;

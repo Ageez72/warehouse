@@ -4,6 +4,15 @@ import DatePicker from 'react-datepicker';
 import axios from 'axios';
 import { BASE_URL } from 'config/constant';
 import 'react-datepicker/dist/react-datepicker.css';
+import { ToastContainer } from 'react-toastify';
+import { showToast } from 'components/ToastNotifier/ToastNotifier';
+const handleAdd = () => showToast('success', 'add');
+const handleEdit = () => showToast('edit', 'edit');
+const handleDelete = () => showToast('delete', 'delete');
+const handleError = () => showToast('error', 'error');
+const handleUpdateError = () => showToast('updateError', 'updateError');
+const handleCreateError = () => showToast('createError', 'createError');
+const handleValidation = () => showToast('info', 'validation');
 
 const productionOrders = () => {
   const [showDelete, setShowDelete] = useState(false);
@@ -33,7 +42,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}orders`, config);
       setSalesOrders(response.data.data.data);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      handleError()
     }
   };
 
@@ -42,19 +51,17 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}order-products/${id}`, config);
       setSalesOrdersProducts(response.data.data);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      handleError()
     }
   };
 
   const getWarehouses = async (id, detailsID) => {
-    console.log(detailsID);
-
     getProductionDetails(detailsID)
     try {
       const response = await axios.get(`${BASE_URL}warehouses?product_id=${id}`, config);
       setWarehouses(response.data.data);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      handleError()
     }
   };
 
@@ -73,7 +80,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}lines?warehouse_id=${id}`, config);
       setProductionLine(response.data.data);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      handleError()
     }
   };
 
@@ -82,7 +89,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}sizes`, config);
       setSizes(response.data.data);
     } catch (error) {
-      console.error('Error fetching sizes:', error);
+      handleError()
     }
   };
 
@@ -91,7 +98,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}priorities`, config);
       setPriorities(response.data.data);
     } catch (error) {
-      console.error('Error fetching sizes:', error);
+      handleError()
     }
   };
 
@@ -100,7 +107,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}productions`, config);
       setProductsOrdersList(response.data.data);
     } catch (error) {
-      console.error('Error fetching sizes:', error);
+      handleError()
     }
   };
 
@@ -111,24 +118,24 @@ const productionOrders = () => {
     getProductsOrdersList();
   }, []);
 
-  const handleEditOrder = (editSatus) => {
-    setEdit(editSatus);
-  };
-
-  function formatDate(dateString) {
-    const date = new Date(dateString);
-
+  function formatDate(dateTimeString) {
+    // Replace space with 'T' to make it a valid ISO string
+    const date = new Date(dateTimeString.replace(' ', 'T'));
+  
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-
-    const hours = String(date.getHours()).padStart(2, '0');
+  
+    let hours = date.getHours();
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+  
+    hours = hours % 12;
+    hours = hours ? hours : 12; // convert 0 to 12
+  
+    return `${year}/${month}/${day} ${hours}:${minutes} ${ampm}`;
   }
-
+  
 
   const handleCreateProductionOrder = () => {
     const salesOrder = document.getElementById('salesOrder').value;
@@ -141,7 +148,6 @@ const productionOrders = () => {
     const status = document.getElementById('status')?.value;
     const startDateValue = startDate ? formatDate(startDate) : null;
     const endDateValue = endDate ? formatDate(endDate) : null;
-    console.log(product);
     
     let data;
 
@@ -154,7 +160,7 @@ const productionOrders = () => {
     }else {
       data = {
         order_id: salesOrder,
-        order_product_id: JSON?.parse(product).id,
+        order_product_id: product &&  JSON?.parse(product).id,
         size,
         quantity,
         warehouse_id: warehouse,
@@ -171,7 +177,7 @@ const productionOrders = () => {
     }
     if (!edit) {
       if (!salesOrder || !product || !size || !quantity || !warehouse || !productionLine || !priority) {
-        alert('Please fill all the fields');
+        handleValidation()
         return;
       }
     }
@@ -183,35 +189,35 @@ const productionOrders = () => {
           setEdit(false);
           setEditingOrder(null);
           getProductsOrdersList();
+          handleEdit()
         })
         .catch((error) => {
-          console.error('Error updating production order:', error);
-          alert('Error updating production order');
+          handleUpdateError()
         });
     } else {
       axios.post(`${BASE_URL}productions`, data, config)
         .then(() => {
           getProductsOrdersList();
+          handleAdd()
         })
         .catch((error) => {
-          console.error('Error creating production order:', error);
-          alert('Error creating production order');
+          handleCreateError()
         });
     }
   };
 
 
-  const handleEditProductionOrder = (order) => {
+  const handleEditProductionOrder = (order) => {    
     setEdit(true);
     setEditingOrder(order);
 
     // Pre-fill the form manually (you might also consider controlled components for scalability)
     document.getElementById('salesOrder').value = order.order_id;
     getSalesOrdersProducts(order.order_id);
-
+    
     setTimeout(() => {
-      document.getElementById('product').value = order.order_product_id;
-      getWarehouses(order.order_product_id);
+      document.getElementById('product').value = JSON.stringify({ product_id: order.product.id, id: order.order_product_id });
+      getWarehouses(order.product.id);
 
       setTimeout(() => {
         document.getElementById('warehouse').value = order.warehouse_id;
@@ -230,8 +236,9 @@ const productionOrders = () => {
     setTimeout(() => {
       document.getElementById('status').value = order.status;
     }, 300);
-    setStartDate(formatDate(order.start));
-    setEndDate(new Date(order.end));
+
+    setStartDate(order.start ? formatDate(order.start): new Date());
+    setEndDate(order.end ? formatDate(order.end): new Date());
   };
 
 
@@ -239,17 +246,21 @@ const productionOrders = () => {
   const handleDeleteShow = () => setShowDelete(true);
 
   const handleDeleteProductionOrder = async () => {
+    console.log(selectedOrder);
+    
     try {
-      await axios.delete(`${BASE_URL}orders/${selectedOrder.order.id}`, config);
+      await axios.delete(`${BASE_URL}orders/${selectedOrder.order_id}`, config);
       setSalesOrdersProducts(salesOrdersProducts.filter(order => order.id !== selectedOrder.order.id));
       handleDeleteClose();
+      handleDelete()
     } catch (err) {
-      console.error('Error deleting order:', err);
+      handleError()
     }
   }
 
   return (
     <React.Fragment>
+      <ToastContainer/>
       <Row>
         <Col md={4}>
           <Card>
@@ -295,7 +306,7 @@ const productionOrders = () => {
                     <Form.Group className="select-group mb-3" controlId="size">
                       <Form.Label>Size</Form.Label>
                       <Form.Control as="select" disabled={true}>
-                        <option value="">Select Sizes</option>
+                        <option value="">Select Size</option>
                         {
                           sizes.map((size, index) => (
                             <option key={index} value={size.id}>{size.name}</option>

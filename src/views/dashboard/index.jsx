@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { BASE_URL } from 'config/constant';
 import BarChart from 'components/charts/GroupedChart';
 import DonutChart from 'components/charts/PieDonutChart';
+import LineChart from 'components/charts/LineChart';
 import axios from 'axios';
 const data = {
   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
@@ -65,6 +66,33 @@ const options2 = {
   cutout: '60%' // this creates the "donut" hole
 };
 
+const data3 = {
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+  datasets: [
+    {
+      label: 'Sales',
+      data: [150, 200, 170, 220, 300],
+      fill: false,
+      borderColor: '#4F46E5',
+      tension: 0.1
+    }
+  ]
+};
+
+const options3 = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top'
+    },
+    title: {
+      display: true,
+      text: 'Monthly Sales Overview'
+    }
+  }
+};
+
+
 const DashDefault = () => {
   const [dashSalesData, setDashSalesData] = useState([]);
 
@@ -93,41 +121,14 @@ const DashDefault = () => {
   return (
     <React.Fragment>
       <Row>
-        <Col xl={3} xxl={3}>
-          <Card>
-            <Card.Body>
-              <h6 className="mb-4">Docks</h6>
-              <div className="row d-flex align-items-center">
-                <div className="col-9">
-                  <h3 className="f-w-300 d-flex align-items-center m-b-0">
-                    <i className={`feather icon-arrow-up ${dashSalesData.docks > 0 ? 'text-c-green' : 'text-c-red'} f-30 m-r-5`} /> {dashSalesData.docks}
-                  </h3>
-                </div>
-                <div className="col-3 text-end">
-                  <p className="m-b-0">{dashSalesData.docks}%</p>
-                </div>
-              </div>
-              <div className="progress m-t-30" style={{ height: '7px' }}>
-                <div
-                  className={`progress-bar icon-arrow-up text-c-green`}
-                  role="progressbar"
-                  style={{ width: `${dashSalesData.docks}%` }}
-                  aria-valuenow={dashSalesData.docks}
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xl={3} xxl={3}>
+        <Col xl={4} xxl={4}>
           <Card>
             <Card.Body>
               <h6 className="mb-4">Sales Orders</h6>
               <div className="row d-flex align-items-center">
                 <div className="col-9">
                   <h3 className="f-w-300 d-flex align-items-center m-b-0">
-                    <i className={`feather icon-arrow-up ${dashSalesData.orders > 0 ? 'text-c-green' : 'text-c-red'} f-30 m-r-5`} /> {dashSalesData.orders}
+                    <i className={`feather icon-arrow-up ${dashSalesData.orders > 0  ? 'icon-arrow-up text-c-green' : 'icon-arrow-down text-c-red'} f-30 m-r-5`}  /> {dashSalesData.orders}
                   </h3>
                 </div>
                 <div className="col-3 text-end">
@@ -147,14 +148,14 @@ const DashDefault = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col xl={3} xxl={3}>
+        <Col xl={4} xxl={4}>
           <Card>
             <Card.Body>
-              <h6 className="mb-4">Pallets</h6>
+              <h6 className="mb-4">Shipping Orders</h6>
               <div className="row d-flex align-items-center">
                 <div className="col-9">
                   <h3 className="f-w-300 d-flex align-items-center m-b-0">
-                    <i className={`feather icon-arrow-up ${dashSalesData.pallets > 0 ? 'text-c-green' : 'text-c-red'} f-30 m-r-5`} /> {dashSalesData.pallets}
+                    <i className={`feather ${dashSalesData.pallets > 0 ? 'icon-arrow-up text-c-green' : 'icon-arrow-down text-c-red'} f-30 m-r-5`} /> {dashSalesData.pallets}
                   </h3>
                 </div>
                 <div className="col-3 text-end">
@@ -174,14 +175,14 @@ const DashDefault = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col xl={3} xxl={3}>
+        <Col xl={4} xxl={4}>
           <Card>
             <Card.Body>
               <h6 className="mb-4">Production Orders</h6>
               <div className="row d-flex align-items-center">
                 <div className="col-9">
                   <h3 className="f-w-300 d-flex align-items-center m-b-0">
-                    <i className={`feather icon-arrow-up ${dashSalesData.productions > 0 ? 'text-c-green' : 'text-c-red'} f-30 m-r-5`} /> {dashSalesData.productions}
+                    <i className={`feather icon-arrow-up ${dashSalesData.productions > 0  ? 'icon-arrow-up text-c-green' : 'icon-arrow-down text-c-red'} f-30 m-r-5`}  /> {dashSalesData.productions}
                   </h3>
                 </div>
                 <div className="col-3 text-end">
@@ -209,7 +210,7 @@ const DashDefault = () => {
               <Card.Title as="h5">Production Performance</Card.Title>
             </Card.Header>
             <Card.Body className="text-center">
-            <BarChart chartData={data} chartOptions={options} />
+              <BarChart chartData={data} chartOptions={options} />
             </Card.Body>
           </Card>
         </Col>
@@ -219,13 +220,23 @@ const DashDefault = () => {
               <Card.Title as="h5">Pallets Chart</Card.Title>
             </Card.Header>
             <Card.Body className="text-center">
-            <DonutChart chartData={data2} chartOptions={options2} />
+              <LineChart chartData={data3} chartOptions={options3} />
             </Card.Body>
           </Card>
         </Col>
       </Row>
       <Row>
-        <Col md={12}>
+        <Col md={6}>
+          <Card>
+            <Card.Header>
+              <Card.Title as="h5">Sales Performance</Card.Title>
+            </Card.Header>
+            <Card.Body className="text-center">
+              <DonutChart chartData={data2} chartOptions={options2} />
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
           <Card className="Recent-Users widget-focus-lg">
             <Card.Header>
               <Card.Title as="h5">Recent Orders</Card.Title>
@@ -235,7 +246,7 @@ const DashDefault = () => {
                 <tbody>
                   <tr className="unread">
                     <td>
-                      <h5 className="mb-2 text-bold">Isabella Christensen</h5>
+                      <h5 className="mb-2 text-bold">Order 1</h5>
                       <p className="m-0">Lorem Ipsum is simply dummy text of…</p>
                     </td>
                     <td>
@@ -247,7 +258,7 @@ const DashDefault = () => {
                   </tr>
                   <tr className="unread">
                     <td>
-                      <h5 className="mb-2 text-bold">Mathilde Andersen</h5>
+                      <h5 className="mb-2 text-bold">Order 2</h5>
                       <p className="m-0">Lorem Ipsum is simply dummy text of…</p>
                     </td>
                     <td>
@@ -259,7 +270,7 @@ const DashDefault = () => {
                   </tr>
                   <tr className="unread">
                     <td>
-                      <h5 className="mb-2 text-bold">Karla Sorensen</h5>
+                      <h5 className="mb-2 text-bold">Order 3</h5>
                       <p className="m-0">Lorem Ipsum is simply dummy text of…</p>
                     </td>
                     <td>
@@ -270,7 +281,7 @@ const DashDefault = () => {
                   </tr>
                   <tr className="unread">
                     <td>
-                      <h5 className="mb-2 text-bold">Ida Jorgensen</h5>
+                      <h5 className="mb-2 text-bold">Order 4</h5>
                       <p className="m-0">Lorem Ipsum is simply dummy text of…</p>
                     </td>
                     <td>
@@ -282,7 +293,7 @@ const DashDefault = () => {
                   </tr>
                   <tr className="unread">
                     <td>
-                      <h5 className="mb-2 text-bold">Albert Andersen</h5>
+                      <h5 className="mb-2 text-bold">Order 5</h5>
                       <p className="m-0">Lorem Ipsum is simply dummy text of…</p>
                     </td>
                     <td>

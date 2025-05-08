@@ -604,3 +604,8 @@ td {
 .text-bold {
   font-weight: 700;
 }
+.btn-success.disabled, .btn-success:disabled {
+  color: #fff;
+  background-color: #ccc;
+  border-color: #ccc;
+}
