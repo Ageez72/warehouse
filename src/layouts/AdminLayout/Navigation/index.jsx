@@ -19,7 +19,7 @@ const Navigation = () => {
   if (windowSize.width < 992 && collapseMenu) {
     navClass = [...navClass, 'mob-open'];
   } else if (collapseMenu) {
-    navClass = [...navClass, 'navbar-collapsed'];
+    navClass = [...navClass];
   }
 
   let navBarClass = ['navbar-wrapper'];

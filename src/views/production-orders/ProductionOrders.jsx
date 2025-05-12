@@ -16,6 +16,7 @@ const handleValidation = () => showToast('info', 'validation');
 
 const productionOrders = () => {
   const [showDelete, setShowDelete] = useState(false);
+  const [counter, setCounter] = useState(0);
   const [edit, setEdit] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(null);
@@ -28,6 +29,7 @@ const productionOrders = () => {
   const [productionOrdersList, setProductionOrdersList] = useState([]);
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [intervalId, setIntervalId] = useState(null);
 
   const token = localStorage.getItem('token');
   const config = {
@@ -111,11 +113,32 @@ const productionOrders = () => {
     }
   };
 
+  const getCountStatus = async () => {
+    try {
+      const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
+      setCounter(response.data.status.length);
+    } catch (error) {
+      handleError()
+    }
+  };
+
+  // run every 1 mintue
+  const getCountStatusInterval = async () => {
+    console.log('Counting...');
+    try {
+      const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
+      setCounter(response.data.status.length);
+    } catch (error) {
+      handleError()
+    }
+  };
+
   useEffect(() => {
     getSalesOrders();
     getSizes();
     getPriority();
     getProductsOrdersList();
+    getCountStatus()
   }, []);
 
   function formatDate(dateTimeString) {
@@ -254,6 +277,70 @@ const productionOrders = () => {
       handleError()
     }
   }
+
+  const updateCountStatus = async (status) => {
+    console.log('Counting...');
+    try {
+      const response = await axios.post(`https://test321-lcj4.onrender.com/line-1/${status}`, config);
+      console.log(response.data);
+      // setCounter(response.data.status.length);
+    } catch (error) {
+      handleError()
+    }
+  };
+
+
+  const handleCounter = (e,status) => {
+    if(e && status !== "stop") {
+      handleToggle(e, status)
+    }else {
+      const parent = e.target.previousSibling;      
+      const playBtn = parent.querySelector(".play");
+      const pauseBtn = parent.querySelector(".pause");
+      playBtn.classList.add("active");
+      pauseBtn.classList.remove("active");
+      parent.classList.remove("playing")
+    }
+
+    if(status === "play") {
+      if (!intervalId) {
+        // const id = setInterval(getCountStatusInterval, 60000); // 60000 ms = 1 minute
+        const id = setInterval(getCountStatusInterval, 5000); // 60000 ms = 1 minute
+        setIntervalId(id);
+      }
+    }else if(status === "pause" || status === "stop") {
+      if (intervalId) {
+        clearInterval(intervalId);  // Stop the interval
+        setIntervalId(null);
+      }
+    }
+
+    if(status === "play"){
+      updateCountStatus('start')
+    } else if(status === "pause"){
+      updateCountStatus('push')
+    } else if(status === "stop"){
+      updateCountStatus('stop')
+    }
+  }
+
+  const handleToggle = (e, status) => {
+    const parent = e.currentTarget.closest(".play-pause-btns");    
+    const playBtn = parent.querySelector(".play");
+    const pauseBtn = parent.querySelector(".pause");
+  
+    // Toggle active class
+    if (status === "play") {
+      playBtn.classList.remove("active");
+      pauseBtn.classList.add("active");
+      parent.classList.add("playing")
+    } else {
+      playBtn.classList.add("active");
+      pauseBtn.classList.remove("active");
+      parent.classList.remove("playing")
+    }
+  };
+  
 
   return (
     <React.Fragment>
@@ -434,7 +521,7 @@ const productionOrders = () => {
                             <td>{order.product.code}</td>
                             <td>{order.size.name}</td>
                             <td>{order.quantity}</td>
-                            <td>-</td>
+                            <td>{counter}</td>
                             <td>{order?.line?.name ? order?.line?.name : "-"}</td>
                             <td>
                               <div className="progress" style={{ height: '7px' }}>
@@ -454,7 +541,12 @@ const productionOrders = () => {
                             <td>{order.start ? order.start : "-"}</td>
                             <td>{order.end ? order.end : "-"}</td>
                             <td>
-                              <div className="d-flex gap-2 actions-btns">
+                              <div className="d-flex gap-2 actions-btns align-items-center">
+                                <div className="d-flex gap-2 align-items-center play-pause-btns">
+                                  <span className={`feather icon-play play active`} title="Play" onClick={(e) => handleCounter(e,"play")}></span>
+                                  <span className={`feather icon-pause pause`} title="Pause" onClick={(e) => handleCounter(e,"pause")}></span>
+                                </div>
+                                <span className="feather icon-stop-circle stop" title='Stop' onClick={(e) => handleCounter(e, "stop")}></span>
                                 <span className="feather icon-edit edit" onClick={() => handleEditProductionOrder(order)}></span>
                                 <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(order) }}></span>
                               </div>

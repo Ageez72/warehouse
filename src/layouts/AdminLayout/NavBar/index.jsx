@@ -6,6 +6,7 @@ import NavRight from './NavRight';
 
 import { ConfigContext } from '../../../contexts/ConfigContext';
 import * as actionType from '../../../store/actions';
+import logo from '../../../assets/images/logo.jpg';
 
 const NavBar = () => {
   const [moreToggle, setMoreToggle] = useState(false);
@@ -43,9 +44,9 @@ const NavBar = () => {
         </Link>
         <Link to="#" className="b-brand">
           <div className="b-bg">
-            <i className="feather icon-trending-up" />
+            <img src={logo} />
           </div>
-          <span className="b-title">Vision Edge Able</span>
+          <span className="b-title">Vision Edge</span>
         </Link>
         <Link to="#" className={moreClass.join(' ')} onClick={() => setMoreToggle(!moreToggle)}>
           <i className="feather icon-more-vertical" />

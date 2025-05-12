@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { ConfigContext } from '../../../../contexts/ConfigContext';
 import * as actionType from '../../../../store/actions';
+import logo from '../../../../assets/images/logo.jpg';
 
 const NavLogo = () => {
   const configContext = useContext(ConfigContext);
@@ -19,7 +20,7 @@ const NavLogo = () => {
       <div className="navbar-brand header-logo">
         <Link to="#" className="b-brand">
           <div className="b-bg">
-            <i className="feather icon-trending-up" />
+            <img src={logo} />
           </div>
           <span className="b-title">Vision Edge</span>
         </Link>

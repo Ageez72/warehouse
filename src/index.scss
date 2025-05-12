@@ -612,3 +612,21 @@ td {
 .required {
   color: #f52011;
 }
+.play-pause-btns {
+  span {
+    cursor: pointer;
+    display: none;
+    &.active {
+      display: block;
+    }
+  }
+
+  & + .stop {
+    display: none;
+    cursor: pointer;
+  }
+
+  &.playing + .stop {
+    display: block;
+  }
+}

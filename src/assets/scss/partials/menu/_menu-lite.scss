@@ -5,16 +5,18 @@
   align-items: center;
 
   .b-bg {
-    background: $theme-color;
+    background: linear-gradient(-135deg, #1de9b6 0%, #1dc4e9 100%);
     border-radius: 10px;
-    width: 35px;
-    height: 35px;
+    width: 85px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 25px;
 
-    i {
-      color: #fff;
+    img {
+      width: 100%;
     }
   }
 
@@ -76,6 +78,9 @@
     .logo-dark,
     .logo-thumb {
       display: none;
+    }
+    .mobile-menu {
+      opacity: 1;
     }
   }
 
@@ -448,6 +453,7 @@
   right: 0;
   top: 0;
   padding: 0 10px;
+  opacity: 0;
 
   span {
     position: relative;
@@ -543,7 +549,7 @@
     position: relative;
     align-items: center;
     display: inline-flex;
-    float: left;
+    // float: left;
     height: $header-height;
     text-align: center;
     width: $Menu-width;
@@ -1189,6 +1195,10 @@
 
       .mobile-menu {
         right: 20px;
+      }
+      .b-brand .b-bg {
+        width: 65px;
+        margin-top: 0;
       }
     }
 
