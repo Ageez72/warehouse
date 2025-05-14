@@ -16,6 +16,7 @@ import {
 import QrScanner from 'components/QrScanner/QrScanner';
 
 const LoadingCheckpoint = () => {
+  const [docksData, setDocksData] = useState([]);
   const [unLoadedPallets, setUnLoadedPallets] = useState([]);
   const [loadedPallets, setLoadedPallets] = useState([]);
   const [totalPallets, setTotalPallets] = useState([]);
@@ -51,7 +52,7 @@ const LoadingCheckpoint = () => {
     try {
       const response = await axios.get(`${BASE_URL}checkpoint?qr_code=${code}`, config);
       if (response.status === 200) {
-        const responseCode = response.data.data.code;
+        const responseCode = response.data.data;
         console.log(response.data.data.code);
         setLoadedPallets((prev) => prev.filter(p => p !== responseCode))
       } else {
@@ -64,9 +65,14 @@ const LoadingCheckpoint = () => {
   }
 
   useEffect(() => {
+    setUnLoadedPallets([])
+    setLoadedPallets([])            
+    setTotalPallets([])
+
     const fetchData = async () => {
       try {
         const docksRes = await axios.get(`${BASE_URL}docks?dock=${selectedDock}`, config);
+        setDocksData(docksRes.data.data.all);
         const list = docksRes.data.data.all;
         let dates = [];
         for (let i = 0; i < list.length; i++) {
@@ -74,30 +80,32 @@ const LoadingCheckpoint = () => {
           dates.push(el.time)
         }
         const now = new Date();
-
+    
         // Convert to Date objects
         const parsedDates = dates.map(date => new Date(date.replace(' ', 'T')));
-
+    
         // Filter future dates and get the soonest one
         const futureDates = parsedDates.filter(date => date > now);
         const nextDate = futureDates.length > 0
           ? futureDates.reduce((a, b) => a < b ? a : b)
           : null;
-
+    
         // Map to booleans
         const result = parsedDates.map(date => date.getTime() === nextDate?.getTime());
         if (result.length > 0) {
           result.map((el, i) => {
-            if (el === true) {              
-              setUnLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "unloauded"));
-            }
-            console.log(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "loaded"));
-            
-            setLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "loaded"))
-            setTotalPallets(docksRes.data.data.all[i].order.pallets.length)
+            // if (el === true && docksRes.data.data.all[i].order.pallets.length > 0) {              
+            //   setUnLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "unloauded"));
+            //   setLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "loaded"))
+            //   setTotalPallets(docksRes.data.data.all[i].order.pallets.length)
+            // } else {
+            //   setUnLoadedPallets([])
+            //   setLoadedPallets([])
+            // }        
           })
         } else {
           setUnLoadedPallets([])
+          setLoadedPallets([])
         }
         setDocksTimeList(result)
         setDocksList(docksRes.data.data.all);
@@ -112,8 +120,45 @@ const LoadingCheckpoint = () => {
     setSelectedDock(dock);
   }
 
-  const getUnLoadedPallets = (item) => {
-    setUnLoadedPallets(item.order.pallets);
+  const getDockPallets = () => {
+    const list = docksData;
+    let dates = [];
+    for (let i = 0; i < list.length; i++) {
+      const el = list[i];
+      dates.push(el.time)
+    }
+    const now = new Date();
+
+    // Convert to Date objects
+    const parsedDates = dates.map(date => new Date(date.replace(' ', 'T')));
+
+    // Filter future dates and get the soonest one
+    const futureDates = parsedDates.filter(date => date > now);
+    const nextDate = futureDates.length > 0
+      ? futureDates.reduce((a, b) => a < b ? a : b)
+      : null;
+
+    // Map to booleans
+    const result = parsedDates.map(date => date.getTime() === nextDate?.getTime());
+    console.log(result);
+    
+    if (result.length > 0) {
+      result.map((el, i) => {
+        if (el === true && list[i].order.pallets.length > 0) {              
+          setUnLoadedPallets(list[i].order.pallets.filter(el => el.status === "unloauded"));
+          setLoadedPallets(list[i].order.pallets.filter(el => el.status === "loaded"))
+          setTotalPallets(list[i].order.pallets.length)
+        } else {
+          setUnLoadedPallets([])
+          setLoadedPallets([])
+        } 
+      })
+    } else {
+      setUnLoadedPallets([])
+      setLoadedPallets([])
+    }
+    setDocksTimeList(result)
+    setDocksList(docksData);
   }
   
 console.log(loadedPallets);
@@ -157,8 +202,8 @@ console.log(loadedPallets);
                       <td>{item.customer.name}</td>
                       {/* <td>{item.name}</td> */}
                       <td>{item.time}</td>
-                      {/* <td>{docksTimeList[index] ?<Button onClick={() => getUnLoadedPallets(item)}>Start</Button> : "" }</td> */}
-                      <td>{docksTimeList[index] ? <span className="badge bg-info">Next</span> : ""}</td>
+                      <td>{docksTimeList[index] ?<Button onClick={() => getDockPallets()}>Start</Button> : "" }</td>
+                      {/* <td>{docksTimeList[index] ? <span className="badge bg-info">Next</span> : ""}</td> */}
                     </tr>
                   )) : (
                     <tr>
