@@ -176,7 +176,7 @@ console.log(loadedPallets);
                   <Form.Group className="select-group mb-3" controlId="productionLine">
                     <Form.Label>Dock Number</Form.Label>
                     <Form.Control as="select" onChange={(e) => handleDocks(e.target.value)}>
-                      <option value="">Select Dock</option>
+                      {/* <option value="">Select Dock</option> */}
                       <option value="dock1" selected>Dock 1</option>
                       <option value="dock2">Dock 2</option>
                       <option value="dock3">Dock 3</option>
