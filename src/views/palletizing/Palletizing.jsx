@@ -361,6 +361,10 @@ const Palletizing = () => {
                           // pdf.text(`Variants: ${item.quantity}`, 20, 210);
 
                           pdf.save(`${item.code}.pdf`);
+                          const blob = pdf.output('blob');
+                          const blobUrl = URL.createObjectURL(blob);
+                          // Open PDF in new tab
+                          window.open(blobUrl, '_blank');
                         };
 
                         return (

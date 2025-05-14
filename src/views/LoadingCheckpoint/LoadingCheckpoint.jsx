@@ -53,8 +53,9 @@ const LoadingCheckpoint = () => {
       const response = await axios.get(`${BASE_URL}checkpoint?qr_code=${code}`, config);
       if (response.status === 200) {
         const responseCode = response.data.data;
-        console.log(response.data.data.code);
+        console.log(response.data.data);
         setLoadedPallets((prev) => prev.filter(p => p !== responseCode))
+        setUnLoadedPallets((prev) => prev.filter(p => p.qr_code !== responseCode.qr_code))        
       } else {
         alert('Failed to assign shipping!');
       }
@@ -162,7 +163,7 @@ const LoadingCheckpoint = () => {
     setDocksList(docksData);
   }
   
-console.log(loadedPallets);
+console.log(unLoadedPallets);
 
   return (
     <Container className="my-4">
@@ -281,7 +282,7 @@ console.log(loadedPallets);
                 <ListGroup variant="flush">
                   {loadedPallets?.map((pallet, i) => (
                     <ListGroup.Item key={i} className="item-success text-white">
-                      {pallet.qr_code}
+                      {pallet.qr_code || pallet}
                       <span className='feather icon-check'></span>
                     </ListGroup.Item>
                   ))}
