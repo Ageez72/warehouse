@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Row, Col, Card, Table, Tabs, Tab, Form, Button, Modal } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import axios from 'axios';
@@ -16,7 +16,6 @@ const handleValidation = () => showToast('info', 'validation');
 
 const productionOrders = () => {
   const [showDelete, setShowDelete] = useState(false);
-  const [counter, setCounter] = useState(0);
   const [edit, setEdit] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(null);
@@ -29,7 +28,10 @@ const productionOrders = () => {
   const [productionOrdersList, setProductionOrdersList] = useState([]);
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [intervalId, setIntervalId] = useState(null);
+
+  const [count, setCount] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const intervalRef = useRef(null);
 
   const token = localStorage.getItem('token');
   const config = {
@@ -108,37 +110,70 @@ const productionOrders = () => {
     try {
       const response = await axios.get(`${BASE_URL}productions`, config);
       setProductionOrdersList(response.data.data);
+      setCount(response.data.data[0].produced)
     } catch (error) {
       handleError()
     }
   };
 
-  const getCountStatus = async () => {
-    try {
-      const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
-      setCounter(response.data.status.length);
-    } catch (error) {
-      handleError()
-    }
-  };
 
-  // run every 1 mintue
-  const getCountStatusInterval = async () => {
-    console.log('Counting...');
-    try {
-      const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
-      setCounter(response.data.status.length);
-    } catch (error) {
-      handleError()
-    }
-  };
+    // Start counter
+    const handleStart = (c) => {
+      if (!isRunning) {
+        setIsRunning(true);
+        setCount(c)
+        intervalRef.current = setInterval(() => {
+          setCount(prev => prev + 1);
+        }, 3000);
+      }
+    };
+  
+    // Pause counter
+    const handlePause = () => {
+      setIsRunning(false);
+      clearInterval(intervalRef.current);
+    };
+  
+    // Reset counter
+    const handleReset = () => {
+      setIsRunning(false);
+      clearInterval(intervalRef.current);
+      // setCount(0);
+    };
+  
+    // Cleanup on unmount
+    useEffect(() => {
+      return () => clearInterval(intervalRef.current);
+    }, []);
+
+  // const getCountStatus = async () => {
+  //   try {
+  //     const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
+  //     setCounter(response.data.status.length);
+  //   } catch (error) {
+  //     handleError()
+  //   }
+  // };
+
+  // // run every 1 mintue
+  // const getCountStatusInterval = async () => {
+  //   console.log('Counting...');
+  //   try {
+  //     const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
+  //     console.log(response.data);
+      
+  //     setCounter(response.data.status.length);
+  //   } catch (error) {
+  //     handleError()
+  //   }
+  // };
 
   useEffect(() => {
     getSalesOrders();
     getSizes();
     getPriority();
     getProductsOrdersList();
-    getCountStatus()
+    // getCountStatus()
   }, []);
 
   function formatDate(dateTimeString) {
@@ -290,7 +325,7 @@ const productionOrders = () => {
   };
 
 
-  const handleCounter = (e,status) => {
+  const handleCounter = (e,status,order) => {
     if(e && status !== "stop") {
       handleToggle(e, status)
     }else {
@@ -302,27 +337,50 @@ const productionOrders = () => {
       parent.classList.remove("playing")
     }
 
-    if(status === "play") {
-      if (!intervalId) {
-        // const id = setInterval(getCountStatusInterval, 60000); // 60000 ms = 1 minute
-        const id = setInterval(getCountStatusInterval, 5000); // 60000 ms = 1 minute
-        setIntervalId(id);
-      }
-    }else if(status === "pause" || status === "stop") {
-      if (intervalId) {
-        clearInterval(intervalId);  // Stop the interval
-        setIntervalId(null);
-      }
-    }
+    // if(status === "play") {
+    //   if (!intervalId) {
+    //     // const id = setInterval(getCountStatusInterval, 60000); // 60000 ms = 1 minute
+    //     setIntervalId(id);
+    //   }
+    // }else if(status === "pause" || status === "stop") {
+    //   if (intervalId) {
+    //     clearInterval(intervalId);  // Stop the interval
+    //     setIntervalId(null);
+    //   }
+    // }
 
     if(status === "play"){
-      updateCountStatus('start')
+      handleStart(order.produced)
+    //   updateCountStatus('push')
     } else if(status === "pause"){
-      updateCountStatus('push')
+      handlePause()
+      axios.post(`${BASE_URL}productions/${order.id}`, {
+        _method: "put",
+        produced: count
+      }, config)
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((error) => {
+          handleUpdateError()
+        });
+    //   updateCountStatus('push')
     } else if(status === "stop"){
-      updateCountStatus('stop')
+      handleReset()      
+      axios.post(`${BASE_URL}productions/${order.id}`, {
+        _method: "put",
+        produced: count
+      }, config)
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((error) => {
+          handleUpdateError()
+        });
+    //   updateCountStatus('stop')
     }
   }
+  
 
   const handleToggle = (e, status) => {
     const parent = e.currentTarget.closest(".play-pause-btns");    
@@ -521,7 +579,7 @@ const productionOrders = () => {
                             <td>{order.product.code}</td>
                             <td>{order.size.name}</td>
                             <td>{order.quantity}</td>
-                            <td>{counter}</td>
+                            <td>{count}</td>
                             <td>{order?.line?.name ? order?.line?.name : "-"}</td>
                             <td>
                               <div className="progress" style={{ height: '7px' }}>
@@ -543,10 +601,10 @@ const productionOrders = () => {
                             <td>
                               <div className="d-flex gap-2 actions-btns align-items-center">
                                 <div className="d-flex gap-2 align-items-center play-pause-btns">
-                                  <span className={`feather icon-play play active`} title="Play" onClick={(e) => handleCounter(e,"play")}></span>
-                                  <span className={`feather icon-pause pause`} title="Pause" onClick={(e) => handleCounter(e,"pause")}></span>
+                                  <span className={`feather icon-play play active`} title="Play" onClick={(e) => handleCounter(e,"play", order)}></span>
+                                  <span className={`feather icon-pause pause`} title="Pause" onClick={(e) => handleCounter(e,"pause", order)}></span>
                                 </div>
-                                <span className="feather icon-stop-circle stop" title='Stop' onClick={(e) => handleCounter(e, "stop")}></span>
+                                <span className="feather icon-stop-circle stop" title='Stop' onClick={(e) => handleCounter(e, "stop", order)}></span>
                                 <span className="feather icon-edit edit" onClick={() => handleEditProductionOrder(order)}></span>
                                 <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(order) }}></span>
                               </div>
