@@ -18,13 +18,15 @@ import QrScanner from 'components/QrScanner/QrScanner';
 const LoadingCheckpoint = () => {
   const [unLoadedPallets, setUnLoadedPallets] = useState([]);
   const [loadedPallets, setLoadedPallets] = useState([]);
+  const [totalPallets, setTotalPallets] = useState([]);
   const [docksList, setDocksList] = useState([]);
   const [docksTimeList, setDocksTimeList] = useState([]);
   const [selectedDock, setSelectedDock] = useState('dock1');
   const [scannedCode, setScannedCode] = useState('');
-  const totalPallets = 12;
-  const progress = loadedPallets.length;
-  // const progressPercent = (progress / totalPallets) * 100;
+  const progress = loadedPallets?.length;
+  const progressPercent = (progress / totalPallets) * 100;
+
+  
 
   const token = localStorage.getItem('token');
   const config = {
@@ -33,7 +35,7 @@ const LoadingCheckpoint = () => {
       'Authorization': `Bearer ${token}`
     }
   };
-  const progressPercent = 0.5 * 100;
+  // const progressPercent = 0.5 * 100;
 
   const handleScan = (data) => {
     console.log(data);
@@ -86,16 +88,19 @@ const LoadingCheckpoint = () => {
         const result = parsedDates.map(date => date.getTime() === nextDate?.getTime());
         if (result.length > 0) {
           result.map((el, i) => {
-            if (el === true) {
+            if (el === true) {              
               setUnLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "unloauded"));
             }
+            console.log(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "loaded"));
+            
+            setLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "loaded"))
+            setTotalPallets(docksRes.data.data.all[i].order.pallets.length)
           })
         } else {
           setUnLoadedPallets([])
         }
         setDocksTimeList(result)
         setDocksList(docksRes.data.data.all);
-        // setLoadedPallets( setUnLoadedPallets(docksRes.data.data.all[i].order.pallets.filter(el => el.status === "loauded")))
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -111,6 +116,7 @@ const LoadingCheckpoint = () => {
     setUnLoadedPallets(item.order.pallets);
   }
   
+console.log(loadedPallets);
 
   return (
     <Container className="my-4">
@@ -229,7 +235,7 @@ const LoadingCheckpoint = () => {
                 <ListGroup variant="flush">
                   {loadedPallets?.map((pallet, i) => (
                     <ListGroup.Item key={i} className="item-success text-white">
-                      {pallet}
+                      {pallet.qr_code}
                       <span className='feather icon-check'></span>
                     </ListGroup.Item>
                   ))}
