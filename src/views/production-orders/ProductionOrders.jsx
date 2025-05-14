@@ -145,7 +145,7 @@ const productionOrders = () => {
     useEffect(() => {
       return () => clearInterval(intervalRef.current);
     }, []);
-
+ 
   // const getCountStatus = async () => {
   //   try {
   //     const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
