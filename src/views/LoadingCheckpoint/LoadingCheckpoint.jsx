@@ -24,7 +24,7 @@ const LoadingCheckpoint = () => {
   const [docksTimeList, setDocksTimeList] = useState([]);
   const [selectedDock, setSelectedDock] = useState('dock1');
   const [scannedCode, setScannedCode] = useState('');
-  const progress = loadedPallets?.length;
+  let progress = loadedPallets?.length;
   const progressPercent = (progress / totalPallets) * 100;
 
   
@@ -68,6 +68,7 @@ const LoadingCheckpoint = () => {
     setUnLoadedPallets([])
     setLoadedPallets([])            
     setTotalPallets([])
+    progress = 0;
 
     const fetchData = async () => {
       try {
@@ -255,7 +256,7 @@ console.log(loadedPallets);
             <Card.Body>
               <h6 className="dark-txt progress-title">Progress</h6>
               <ProgressBar
-                now={progressPercent}
+                now={loadedPallets.length > 0 ? progressPercent  : 0}
                 variant="success"
                 className="mb-4"
               />
