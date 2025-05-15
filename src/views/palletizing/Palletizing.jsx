@@ -360,7 +360,7 @@ const Palletizing = () => {
                           pdf.text(`Product: ${item.product.name}`, 130, 200);
                           // pdf.text(`Variants: ${item.quantity}`, 20, 210);
 
-                          pdf.save(`${item.code}.pdf`);
+                          // pdf.save(`${item.code}.pdf`);
                           const blob = pdf.output('blob');
                           const blobUrl = URL.createObjectURL(blob);
                           // Open PDF in new tab

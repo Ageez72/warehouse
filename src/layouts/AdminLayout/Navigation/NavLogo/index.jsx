@@ -18,7 +18,7 @@ const NavLogo = () => {
   return (
     <React.Fragment>
       <div className="navbar-brand header-logo">
-        <Link to="#" className="b-brand">
+        <Link to="/dashboard" className="b-brand">
           <div className="b-bg">
             <img src={logo} />
           </div>
