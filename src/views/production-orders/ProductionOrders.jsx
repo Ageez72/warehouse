@@ -29,9 +29,8 @@ const productionOrders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const [count, setCount] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const intervalRef = useRef(null);
+  const [counter, setCounter] = useState(15);
+  const [intervalId, setIntervalId] = useState(null);
 
   const token = localStorage.getItem('token');
   const config = {
@@ -110,70 +109,40 @@ const productionOrders = () => {
     try {
       const response = await axios.get(`${BASE_URL}productions`, config);
       setProductionOrdersList(response.data.data);
-      setCount(response.data.data[0].produced)
+      setCounter(response.data.data[0].produced);
+      setStartDate(response.data.data[0].start)
+      setEndDate(response.data.data[0].end)
     } catch (error) {
       handleError()
     }
   };
 
+  const getCountStatus = async () => {
+    try {
+      const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`, config);
+      setCounter(response.data.status.length);
+    } catch (error) {
+      handleError()
+    }
+  };
 
-    // Start counter
-    const handleStart = (c) => {
-      if (!isRunning) {
-        setIsRunning(true);
-        setCount(c)
-        intervalRef.current = setInterval(() => {
-          setCount(prev => prev + 1);
-        }, 3000);
-      }
-    };
-  
-    // Pause counter
-    const handlePause = () => {
-      setIsRunning(false);
-      clearInterval(intervalRef.current);
-    };
-  
-    // Reset counter
-    const handleReset = () => {
-      setIsRunning(false);
-      clearInterval(intervalRef.current);
-      // setCount(0);
-    };
-  
-    // Cleanup on unmount
-    useEffect(() => {
-      return () => clearInterval(intervalRef.current);
-    }, []);
- 
-  // const getCountStatus = async () => {
-  //   try {
-  //     const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
-  //     setCounter(response.data.status.length);
-  //   } catch (error) {
-  //     handleError()
-  //   }
-  // };
+  const getCountStatusInterval = async () => {
+    try {
+      const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`, config);
+      console.log(response.data);
 
-  // // run every 1 mintue
-  // const getCountStatusInterval = async () => {
-  //   console.log('Counting...');
-  //   try {
-  //     const response = await axios.get(`https://test321-lcj4.onrender.com/line-1/status`, config);
-  //     console.log(response.data);
-      
-  //     setCounter(response.data.status.length);
-  //   } catch (error) {
-  //     handleError()
-  //   }
-  // };
+      setCounter(response.data.status.length);
+    } catch (error) {
+      handleError()
+    }
+  };
 
   useEffect(() => {
     getSalesOrders();
     getSizes();
     getPriority();
     getProductsOrdersList();
-    // getCountStatus()
+    getCountStatus()
   }, []);
 
   function formatDate(dateTimeString) {
@@ -313,23 +282,22 @@ const productionOrders = () => {
     }
   }
 
-  const updateCountStatus = async (status) => {
-    console.log('Counting...');
+  const updateCountStatus = async (status, id) => {
     try {
-      const response = await axios.post(`https://test321-lcj4.onrender.com/line-1/${status}`, config);
+      const response = await axios.post(`https://spartanapi.ngrok.app/line-1/${status}`, config);
       console.log(response.data);
-      // setCounter(response.data.status.length);
+      setCounter(response.data.status.length);
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
 
-  const handleCounter = (e,status,order) => {
-    if(e && status !== "stop") {
+  const handleCounter = (e, status, order) => {
+    if (e && status !== "stop") {
       handleToggle(e, status)
-    }else {
-      const parent = e.target.previousSibling;      
+    } else {
+      const parent = e.target.previousSibling;
       const playBtn = parent.querySelector(".play");
       const pauseBtn = parent.querySelector(".pause");
       playBtn.classList.add("active");
@@ -337,56 +305,66 @@ const productionOrders = () => {
       parent.classList.remove("playing")
     }
 
-    // if(status === "play") {
-    //   if (!intervalId) {
-    //     // const id = setInterval(getCountStatusInterval, 60000); // 60000 ms = 1 minute
-    //     setIntervalId(id);
-    //   }
-    // }else if(status === "pause" || status === "stop") {
-    //   if (intervalId) {
-    //     clearInterval(intervalId);  // Stop the interval
-    //     setIntervalId(null);
-    //   }
-    // }
+    if (status === "play") {
+      if (!intervalId) {
+        const id = setInterval(getCountStatusInterval, 30000); // 30000 ms = 30 Seconds
+        setIntervalId(id);
+      }
+    } else if (status === "pause" || status === "stop") {
+      if (intervalId) {
+        clearInterval(intervalId);  // Stop the interval
+        setIntervalId(null);
+      }
+    }
 
-    if(status === "play"){
-      handleStart(order.produced)
-    //   updateCountStatus('push')
-    } else if(status === "pause"){
-      handlePause()
+    if (status === "play") {
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
-        produced: count
+        start: startDate || new Date(),
+        status: "running"
       }, config)
         .then((res) => {
-          console.log(res);
+          getProductsOrdersList();
         })
         .catch((error) => {
           handleUpdateError()
         });
-    //   updateCountStatus('push')
-    } else if(status === "stop"){
-      handleReset()      
+      updateCountStatus('push', order.id)
+    } else if (status === "pause") {
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
-        produced: count
+        produced: counter,
+        end: new Date(),
       }, config)
         .then((res) => {
-          console.log(res);
+          getProductsOrdersList()
         })
         .catch((error) => {
           handleUpdateError()
         });
-    //   updateCountStatus('stop')
+      updateCountStatus('push', order.id)
+    } else if (status === "stop") {
+      axios.post(`${BASE_URL}productions/${order.id}`, {
+        _method: "put",
+        produced: counter,
+        end: new Date(),
+      }, config)
+        .then((res) => {
+          getProductsOrdersList()
+        })
+        .catch((error) => {
+          handleUpdateError()
+        });
+      updateCountStatus('stop', order.id)
     }
   }
-  
+
 
   const handleToggle = (e, status) => {
-    const parent = e.currentTarget.closest(".play-pause-btns");    
+    const parent = e.currentTarget.closest(".play-pause-btns");
     const playBtn = parent.querySelector(".play");
     const pauseBtn = parent.querySelector(".pause");
-  
+
     // Toggle active class
     if (status === "play") {
       playBtn.classList.remove("active");
@@ -398,7 +376,7 @@ const productionOrders = () => {
       parent.classList.remove("playing")
     }
   };
-  
+
 
   return (
     <React.Fragment>
@@ -564,7 +542,7 @@ const productionOrders = () => {
                         <th>Qty</th>
                         <th>Produced</th>
                         <th>Line</th>
-                        <th>Progress</th>
+                        {/* <th>Progress</th> */}
                         <th>Status</th>
                         <th>Start Date - Time</th>
                         <th>End Date - Time</th>
@@ -573,15 +551,17 @@ const productionOrders = () => {
                     </thead>
                     <tbody>
                       {
-                        productionOrdersList.filter((status) => status.status !== "finished").map((order) => (
+                        productionOrdersList.filter((status) => status.status !== "finished").map((order, i) => (
                           <tr key={order.id}>
                             <th scope="row">{order.order.code}</th>
                             <td>{order.product.code}</td>
                             <td>{order.size.name}</td>
                             <td>{order.quantity}</td>
-                            <td>{count}</td>
+                            <td>{i === 0 ? (
+                              counter <= order.quantity ? counter : order.quantity
+                            ) : "-"}</td>
                             <td>{order?.line?.name ? order?.line?.name : "-"}</td>
-                            <td>
+                            {/* <td>
                               <div className="progress" style={{ height: '7px' }}>
                                 <div
                                   className={`progress-bar ${order.status === "not started" ? "bg-warning" : ""}`}
@@ -592,7 +572,7 @@ const productionOrders = () => {
                                   aria-valuemax="100"
                                 />
                               </div>
-                            </td>
+                            </td> */}
                             <td>
                               <span className={`badge ${order.status === "not started" ? "bg-warning" : "bg-primary"}`}>{order.status === "not started" ? "Pending" : "In Progress"}</span>
                             </td>
@@ -600,12 +580,18 @@ const productionOrders = () => {
                             <td>{order.end ? order.end : "-"}</td>
                             <td>
                               <div className="d-flex gap-2 actions-btns align-items-center">
-                                <div className="d-flex gap-2 align-items-center play-pause-btns">
-                                  <span className={`feather icon-play play active`} title="Play" onClick={(e) => handleCounter(e,"play", order)}></span>
-                                  <span className={`feather icon-pause pause`} title="Pause" onClick={(e) => handleCounter(e,"pause", order)}></span>
-                                </div>
-                                <span className="feather icon-stop-circle stop" title='Stop' onClick={(e) => handleCounter(e, "stop", order)}></span>
-                                <span className="feather icon-edit edit" onClick={() => handleEditProductionOrder(order)}></span>
+                                {
+                                  i === 0 && (
+                                    <>
+                                    <div className="d-flex gap-2 align-items-center play-pause-btns">
+                                      <span className={`feather icon-play play active`} title="Play" onClick={(e) => handleCounter(e, "play", order)}></span>
+                                      <span className={`feather icon-pause pause`} title="Pause" onClick={(e) => handleCounter(e, "pause", order)}></span>
+                                    </div>
+                                    <span className="feather icon-stop-circle stop" title='Stop' onClick={(e) => handleCounter(e, "stop", order)}></span>
+                                    </>
+                                  )
+                                }
+                                {/* <span className="feather icon-edit edit" onClick={() => handleEditProductionOrder(order)}></span> */}
                                 <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(order) }}></span>
                               </div>
                             </td>
