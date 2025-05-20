@@ -29,8 +29,12 @@ const Products = () => {
   // Fetch all lines
   const getLines = async (id) => {
     try {
-      const response = await axios.get(`${BASE_URL}lines?warehouse_id=${id}`, headers);
-      setLines(response.data.data);
+      if(id){
+        const response = await axios.get(`${BASE_URL}lines?warehouse_id=${id}`, headers);
+        setLines(response.data.data);
+      }else {
+        setLines([])
+      }
     } catch (error) {
       console.error('Error fetching lines:', error);
     }
@@ -70,7 +74,9 @@ const Products = () => {
     const updated = [...formData.warehouses];
     updated[index] = { ...updated[index], [field]: value };
     setFormData({ ...formData, warehouses: updated });
-    getLines(value);
+    if(field === "warehouse_id"){
+      getLines(value);
+    }
   };
 
   const addWarehouseRow = () => {
