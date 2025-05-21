@@ -128,7 +128,7 @@ const productionOrders = () => {
       console.log(response.data.status.length);
 
       // if (response.data.before === "stop" && response.data.current === "start" || response.data.before === "push" && response.data.current === "start") {
-      //   const id = setInterval(getCountStatusInterval, 15000); // 30000 ms = 30 Seconds
+      //   const id = setInterval(getCountStatusInterval, 10000); // 30000 ms = 30 Seconds
       //   setIntervalId(id);
       // }
     } catch (error) {
@@ -329,7 +329,7 @@ const productionOrders = () => {
 
     if (status === "pause" || status === "play") {
       if (!intervalId) {
-        const id = setInterval(getCountStatusInterval, 15000); // 30000 ms = 30 Seconds
+        const id = setInterval(getCountStatusInterval, 10000); // 30000 ms = 30 Seconds
         setIntervalId(id);
       }
     } else if (status === "stop") {
