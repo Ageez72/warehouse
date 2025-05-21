@@ -119,7 +119,7 @@ const productionOrders = () => {
 
   const getCountStatus = async () => {
     try {
-      const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`, config);
+      const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`);
       setCounter(response.data.status.length);
     } catch (error) {
       handleError()
@@ -128,7 +128,7 @@ const productionOrders = () => {
 
   const getCountStatusInterval = async () => {
     try {
-      const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`, config);
+      const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`);
       console.log(response.data);
 
       setCounter(response.data.status.length);
@@ -284,7 +284,7 @@ const productionOrders = () => {
 
   const updateCountStatus = async (status, id) => {
     try {
-      const response = await axios.post(`https://spartanapi.ngrok.app/line-1/${status}`, config);
+      const response = await axios.post(`https://spartanapi.ngrok.app/line-1/${status}`);
       console.log(response.data);
       setCounter(response.data.status.length);
     } catch (error) {
@@ -329,7 +329,7 @@ const productionOrders = () => {
         .catch((error) => {
           handleUpdateError()
         });
-      updateCountStatus('push', order.id)
+      updateCountStatus('start', order.id)
     } else if (status === "pause") {
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
