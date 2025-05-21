@@ -619,6 +619,7 @@ td {
     &.active {
       display: block;
     }
+
   }
 
   & + .stop {
@@ -629,4 +630,8 @@ td {
   &.playing + .stop {
     display: block;
   }
+}
+
+.disabled {
+  pointer-events: none !important;
 }

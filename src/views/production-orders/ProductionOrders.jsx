@@ -29,7 +29,9 @@ const productionOrders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const [counter, setCounter] = useState(15);
+  const [counter, setCounter] = useState(0);
+  const [counterStatus, setCounterStatus] = useState("stop");
+  const [counterPrevStatus, setCounterPrevStatus] = useState("");
   const [intervalId, setIntervalId] = useState(null);
 
   const token = localStorage.getItem('token');
@@ -109,7 +111,7 @@ const productionOrders = () => {
     try {
       const response = await axios.get(`${BASE_URL}productions`, config);
       setProductionOrdersList(response.data.data);
-      setCounter(response.data.data[0].produced);
+      // setCounter(response.data.data[0].produced);
       setStartDate(response.data.data[0].start)
       setEndDate(response.data.data[0].end)
     } catch (error) {
@@ -121,6 +123,14 @@ const productionOrders = () => {
     try {
       const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`);
       setCounter(response.data.status.length);
+      setCounterStatus(response.data.current)
+      setCounterPrevStatus(response.data.before)
+      console.log(response.data.status.length);
+
+      // if (response.data.before === "stop" && response.data.current === "start" || response.data.before === "push" && response.data.current === "start") {
+      //   const id = setInterval(getCountStatusInterval, 30000); // 30000 ms = 30 Seconds
+      //   setIntervalId(id);
+      // }
     } catch (error) {
       handleError()
     }
@@ -129,9 +139,10 @@ const productionOrders = () => {
   const getCountStatusInterval = async () => {
     try {
       const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`);
-      console.log(response.data);
-
+      console.log(response.data.status.length);
       setCounter(response.data.status.length);
+      setCounterStatus(response.data.current)
+      setCounterPrevStatus(response.data.before)
     } catch (error) {
       handleError()
     }
@@ -142,7 +153,7 @@ const productionOrders = () => {
     getSizes();
     getPriority();
     getProductsOrdersList();
-    getCountStatus()
+    getCountStatus();
   }, []);
 
   function formatDate(dateTimeString) {
@@ -294,30 +305,45 @@ const productionOrders = () => {
 
 
   const handleCounter = (e, status, order) => {
-    if (e && status !== "stop") {
-      handleToggle(e, status)
-    } else {
-      const parent = e.target.previousSibling;
-      const playBtn = parent.querySelector(".play");
-      const pauseBtn = parent.querySelector(".pause");
-      playBtn.classList.add("active");
-      pauseBtn.classList.remove("active");
-      parent.classList.remove("playing")
+      const playBtn = document.querySelector("span.play");
+      const stopBtn = document.querySelector("span.stop");
+
+    // if (e && status !== "stop") {
+    //   handleToggle(e, status)
+    // } else {
+    //   playBtn.classList.add("active");
+    //   pauseBtn.classList.remove("active");
+    //   parent.classList.remove("playing")
+    // }
+
+    if(status === 'play') {
+      playBtn.classList.add("disabled")
+      stopBtn.classList.remove("disabled")
+    } else if(status === 'stop') {
+      playBtn.classList.remove("disabled")
+      stopBtn.classList.add("disabled")
+    }else {
+      playBtn.classList.remove("disabled")
+      stopBtn.classList.remove("disabled")
     }
 
-    if (status === "play") {
+    if (status === "pause" || status === "play") {
       if (!intervalId) {
         const id = setInterval(getCountStatusInterval, 30000); // 30000 ms = 30 Seconds
         setIntervalId(id);
       }
-    } else if (status === "pause" || status === "stop") {
+    } else if (status === "stop") {
       if (intervalId) {
         clearInterval(intervalId);  // Stop the interval
         setIntervalId(null);
       }
     }
+    console.log(status);
+    console.log(counterStatus);
+    console.log(counterPrevStatus);
 
-    if (status === "play") {
+    if (status === "play") { 
+           
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
         start: startDate || new Date(),
@@ -377,7 +403,8 @@ const productionOrders = () => {
     }
   };
 
-
+  console.log(counter);
+  
   return (
     <React.Fragment>
       <ToastContainer />
@@ -557,9 +584,7 @@ const productionOrders = () => {
                             <td>{order.product.code}</td>
                             <td>{order.size.name}</td>
                             <td>{order.quantity}</td>
-                            <td>{i === 0 ? (
-                              counter <= order.quantity ? counter : order.quantity
-                            ) : "-"}</td>
+                            <td>{i === 0 ? counter : "-"}</td>
                             <td>{order?.line?.name ? order?.line?.name : "-"}</td>
                             {/* <td>
                               <div className="progress" style={{ height: '7px' }}>
@@ -583,9 +608,9 @@ const productionOrders = () => {
                                 {
                                   i === 0 && (
                                     <>
-                                    <div className="d-flex gap-2 align-items-center play-pause-btns">
+                                    <div className={`d-flex gap-2 align-items-center play-pause-btns playing`}>
                                       <span className={`feather icon-play play active`} title="Play" onClick={(e) => handleCounter(e, "play", order)}></span>
-                                      <span className={`feather icon-pause pause`} title="Pause" onClick={(e) => handleCounter(e, "pause", order)}></span>
+                                      <span className={`feather icon-pause pause active`} title="Pause" onClick={(e) => handleCounter(e, "pause", order)}></span>
                                     </div>
                                     <span className="feather icon-stop-circle stop" title='Stop' onClick={(e) => handleCounter(e, "stop", order)}></span>
                                     </>
