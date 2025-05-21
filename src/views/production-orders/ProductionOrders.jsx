@@ -584,7 +584,10 @@ const productionOrders = () => {
                             <td>{order.product.code}</td>
                             <td>{order.size.name}</td>
                             <td>{order.quantity}</td>
-                            <td>{i === 0 ? counter : "-"}</td>
+                            {/* <td>{i === 0 ? counter : "-"}</td> */}
+                            <td>{i === 0 ? (
+                              counter <= order.quantity ? counter : order.quantity
+                            ) : "-"}</td>
                             <td>{order?.line?.name ? order?.line?.name : "-"}</td>
                             {/* <td>
                               <div className="progress" style={{ height: '7px' }}>
