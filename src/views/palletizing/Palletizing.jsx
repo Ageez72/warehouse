@@ -115,10 +115,14 @@ const Palletizing = () => {
     try {
       const response = await axios.post(`${BASE_URL}pallets`, palletData, config);
       handleAdd()
-      resetForm();
+      if (orderType === "Production Order") {
+        resetForm("sales");
+      }else {
+        resetForm();
+      }
       getPalletizingList();
     } catch (error) {
-      handleSubmitError()
+      // handleSubmitError()
     }
   }
 
@@ -151,13 +155,16 @@ const Palletizing = () => {
       setPalletizingList(palletizingList.filter(order => order.id !== selectedOrder.id));
       handleDeleteClose();
       handleDelete()
+      location.reload();
     } catch (err) {
       handleError()
     }
   }
-  const resetForm = () => {
-    document.getElementById('salesOrder').value = "";
-    document.getElementById('productionOrder').value = "";
+  const resetForm = (sales) => {
+    if(sales){
+      // document.getElementById('salesOrder').value = "";
+      // document.getElementById('productionOrder').value = "";
+    }
     document.getElementById('palletCapacity').value = "";
     document.getElementById('warehouseFrom').value = "";
     document.getElementById('warehouseTo').value = "";
@@ -352,12 +359,12 @@ const Palletizing = () => {
 
                           // Add text under the QR code
                           pdf.setFontSize(14);
-                          pdf.text(`Sales Order: ${item.order.code}`, 20, 180);
-                          pdf.text(`Boxes: ${item.quantity}`, 130, 180);
-                          pdf.text(`Pallet ID: ${item.code}`, 20, 190);
-                          pdf.text(`Warehouse to: ${item.warehouse_to.name}`, 130, 190);
-                          pdf.text(`Date: ${item.created_at}`, 20, 200);
-                          pdf.text(`Product: ${item.product.name}`, 130, 200);
+                          pdf.text(`Sales Order: ${item?.order?.code ? item?.order?.code : "Random Order"}`, 20, 180);
+                          pdf.text(`Boxes: ${item?.quantity}`, 130, 180);
+                          pdf.text(`Pallet ID: ${item?.code}`, 20, 190);
+                          // pdf.text(`Warehouse to: ${item.warehouse_to.name}`, 130, 190);
+                          pdf.text(`Product: ${item?.product?.name}`, 130, 190);
+                          pdf.text(`Date: ${item?.created_at}`, 20, 200);
                           // pdf.text(`Variants: ${item.quantity}`, 20, 210);
 
                           // pdf.save(`${item.code}.pdf`);
