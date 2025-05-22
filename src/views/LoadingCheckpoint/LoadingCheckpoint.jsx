@@ -240,11 +240,11 @@ console.log(unLoadedPallets);
                 </ul>
               </div>
               <QrScanner onScanSuccess={handleScan} />
-              {scannedCode && (
+              {/* {scannedCode && (
                 <Alert variant="success" className="mt-3 text-center">
                   ✅ Verified: {scannedCode}
                 </Alert>
-              )}
+              )} */}
             </Card.Body>
           </Card>
         </Col>

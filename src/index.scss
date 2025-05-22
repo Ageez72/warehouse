@@ -635,3 +635,17 @@ td {
 .disabled {
   pointer-events: none !important;
 }
+
+
+.btn-request-permissions {
+  color: #fff;
+  border: 1px solid transparent;
+  padding: 10px 20px;
+  border-radius: 0.25rem;
+  font-size: 14px;
+  margin-bottom: 5px;
+  margin-right: 10px;
+  transition: all 0.3s ease-in-out;
+  background-color: #2563EB;
+  border-color: #2563EB;
+}
