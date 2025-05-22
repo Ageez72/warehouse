@@ -41,6 +41,7 @@ const productionOrders = () => {
 
   let selectedOrderQty = 0;
   let selectedOrderID = "";
+  let selectedOrderStartDate = new Date();
 
   const token = localStorage.getItem('token');
   const config = {
@@ -150,15 +151,13 @@ const productionOrders = () => {
       setCounter(response.data.status.length);
       setCounterStatus(response.data.current)
       setCounterPrevStatus(response.data.before)
-
-      const startDateValue = startDate ? formatDate(startDate) : null;
-      const endDateValue = endDate ? formatDate(endDate) : null;
+      
 
       let data = {
         _method: "put",
         status: "finished",
-        start: formatDate(startDateValue),
-        end: formatDate(endDateValue),
+        start: formatDate(selectedOrderStartDate),
+        end: formatDate(new Date()),
       }
       if (response.data.status.length >= selectedOrderQty) {
         axios.post(`${BASE_URL}productions/${selectedOrderID}`, data, config)
@@ -329,6 +328,7 @@ const productionOrders = () => {
     const stopBtn = document.querySelector("span.stop");
     selectedOrderQty = order.quantity;
     selectedOrderID = order.id;
+    selectedOrderStartDate = new Date();
     // if (e && status !== "stop") {
     //   handleToggle(e, status)
     // } else {
