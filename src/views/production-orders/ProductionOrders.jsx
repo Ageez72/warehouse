@@ -14,6 +14,11 @@ const handleUpdateError = () => showToast('updateError', 'updateError');
 const handleCreateError = () => showToast('createError', 'createError');
 const handleValidation = () => showToast('info', 'validation');
 
+function formatDate(dateTimeString) {
+  const date = new Date(dateTimeString);
+  return date;
+}
+
 const productionOrders = () => {
   const [showDelete, setShowDelete] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -34,6 +39,9 @@ const productionOrders = () => {
   const [counterPrevStatus, setCounterPrevStatus] = useState("");
   const [intervalId, setIntervalId] = useState(null);
 
+  let selectedOrderQty = 0;
+  let selectedOrderID = "";
+
   const token = localStorage.getItem('token');
   const config = {
     headers: {
@@ -47,7 +55,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}orders`, config);
       setSalesOrders(response.data.data.data);
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
@@ -56,7 +64,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}order-products/${id}`, config);
       setSalesOrdersProducts(response.data.data);
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
@@ -66,7 +74,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}warehouses?product_id=${id}`, config);
       setWarehouses(response.data.data);
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
@@ -85,7 +93,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}lines?warehouse_id=${id}`, config);
       setProductionLine(response.data.data);
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
@@ -94,7 +102,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}sizes`, config);
       setSizes(response.data.data);
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
@@ -103,7 +111,7 @@ const productionOrders = () => {
       const response = await axios.get(`${BASE_URL}priorities`, config);
       setPriorities(response.data.data);
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
@@ -115,7 +123,7 @@ const productionOrders = () => {
       setStartDate(response.data.data[0].start)
       setEndDate(response.data.data[0].end)
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
@@ -125,26 +133,44 @@ const productionOrders = () => {
       setCounter(response.data.status.length);
       setCounterStatus(response.data.current)
       setCounterPrevStatus(response.data.before)
-      console.log(response.data.status.length);
 
       // if (response.data.before === "stop" && response.data.current === "start" || response.data.before === "push" && response.data.current === "start") {
       //   const id = setInterval(getCountStatusInterval, 10000); // 30000 ms = 30 Seconds
       //   setIntervalId(id);
       // }
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
   const getCountStatusInterval = async () => {
     try {
       const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`);
-      console.log(response.data.status.length);
+
       setCounter(response.data.status.length);
       setCounterStatus(response.data.current)
       setCounterPrevStatus(response.data.before)
+
+      const startDateValue = startDate ? formatDate(startDate) : null;
+      const endDateValue = endDate ? formatDate(endDate) : null;
+
+      let data = {
+        _method: "put",
+        status: "finished",
+        start: formatDate(startDateValue),
+        end: formatDate(endDateValue),
+      }
+      if (response.data.status.length >= selectedOrderQty) {
+        axios.post(`${BASE_URL}productions/${selectedOrderID}`, data, config)
+          .then(() => {
+            window.location.reload();
+          })
+          .catch((error) => {
+            // handleUpdateError()
+          });
+      }
     } catch (error) {
-      handleError()
+      // handleError()
     }
   };
 
@@ -156,10 +182,7 @@ const productionOrders = () => {
     getCountStatus();
   }, []);
 
-  function formatDate(dateTimeString) {
-    const date = new Date(dateTimeString);
-    return date;
-  }
+
 
   const resetForm = () => {
     document.getElementById('salesOrder').value = "";
@@ -225,7 +248,7 @@ const productionOrders = () => {
           resetForm()
         })
         .catch((error) => {
-          handleUpdateError()
+          // handleUpdateError()
         });
     } else {
       axios.post(`${BASE_URL}productions`, data, config)
@@ -235,7 +258,7 @@ const productionOrders = () => {
           resetForm()
         })
         .catch((error) => {
-          handleCreateError()
+          // handleCreateError()
         });
     }
   };
@@ -280,8 +303,6 @@ const productionOrders = () => {
   const handleDeleteShow = () => setShowDelete(true);
 
   const handleDeleteProductionOrder = async () => {
-    console.log(selectedOrder);
-
     try {
       await axios.delete(`${BASE_URL}productions/${selectedOrder.id}`, config);
       let filteredData = productionOrdersList.filter(order => order.id !== selectedOrder.id)
@@ -289,14 +310,13 @@ const productionOrders = () => {
       handleDeleteClose();
       handleDelete()
     } catch (err) {
-      handleError()
+      // handleError()
     }
   }
 
   const updateCountStatus = async (status, id) => {
     try {
       const response = await axios.post(`https://spartanapi.ngrok.app/line-1/${status}`);
-      console.log(response.data);
       setCounter(response.data.status.length);
     } catch (error) {
       // handleError()
@@ -305,9 +325,10 @@ const productionOrders = () => {
 
 
   const handleCounter = (e, status, order) => {
-      const playBtn = document.querySelector("span.play");
-      const stopBtn = document.querySelector("span.stop");
-
+    const playBtn = document.querySelector("span.play");
+    const stopBtn = document.querySelector("span.stop");
+    selectedOrderQty = order.quantity;
+    selectedOrderID = order.id;
     // if (e && status !== "stop") {
     //   handleToggle(e, status)
     // } else {
@@ -316,13 +337,13 @@ const productionOrders = () => {
     //   parent.classList.remove("playing")
     // }
 
-    if(status === 'play') {
+    if (status === 'play') {
       playBtn.classList.add("disabled")
       stopBtn.classList.remove("disabled")
-    } else if(status === 'stop') {
+    } else if (status === 'stop') {
       playBtn.classList.remove("disabled")
       stopBtn.classList.add("disabled")
-    }else {
+    } else {
       playBtn.classList.remove("disabled")
       stopBtn.classList.remove("disabled")
     }
@@ -338,12 +359,9 @@ const productionOrders = () => {
         setIntervalId(null);
       }
     }
-    console.log(status);
-    console.log(counterStatus);
-    console.log(counterPrevStatus);
 
-    if (status === "play") { 
-           
+    if (status === "play") {
+
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
         start: startDate || new Date(),
@@ -353,7 +371,7 @@ const productionOrders = () => {
           getProductsOrdersList();
         })
         .catch((error) => {
-          handleUpdateError()
+          // handleUpdateError()
         });
       updateCountStatus('start', order.id)
     } else if (status === "pause") {
@@ -366,7 +384,7 @@ const productionOrders = () => {
           getProductsOrdersList()
         })
         .catch((error) => {
-          handleUpdateError()
+          // handleUpdateError()
         });
       updateCountStatus('push', order.id)
     } else if (status === "stop") {
@@ -379,7 +397,7 @@ const productionOrders = () => {
           getProductsOrdersList()
         })
         .catch((error) => {
-          handleUpdateError()
+          // handleUpdateError()
         });
       updateCountStatus('stop', order.id)
     }
@@ -403,8 +421,6 @@ const productionOrders = () => {
     }
   };
 
-  console.log(counter);
-  
   return (
     <React.Fragment>
       <ToastContainer />
@@ -584,7 +600,6 @@ const productionOrders = () => {
                             <td>{order.product.code}</td>
                             <td>{order.size.name}</td>
                             <td>{order.quantity}</td>
-                            {/* <td>{i === 0 ? counter : "-"}</td> */}
                             <td>{i === 0 ? (
                               counter <= order.quantity ? counter : order.quantity
                             ) : "-"}</td>
@@ -611,11 +626,11 @@ const productionOrders = () => {
                                 {
                                   i === 0 && (
                                     <>
-                                    <div className={`d-flex gap-2 align-items-center play-pause-btns playing`}>
-                                      <span className={`feather icon-play play active`} title="Play" onClick={(e) => handleCounter(e, "play", order)}></span>
-                                      <span className={`feather icon-pause pause active`} title="Pause" onClick={(e) => handleCounter(e, "pause", order)}></span>
-                                    </div>
-                                    <span className="feather icon-stop-circle stop" title='Stop' onClick={(e) => handleCounter(e, "stop", order)}></span>
+                                      <div className={`d-flex gap-2 align-items-center play-pause-btns playing`}>
+                                        <span className={`feather icon-play play active`} title="Play" onClick={(e) => handleCounter(e, "play", order)}></span>
+                                        <span className={`feather icon-pause pause active`} title="Pause" onClick={(e) => handleCounter(e, "pause", order)}></span>
+                                      </div>
+                                      <span className="feather icon-stop-circle stop" title='Stop' onClick={(e) => handleCounter(e, "stop", order)}></span>
                                     </>
                                   )
                                 }
@@ -654,7 +669,7 @@ const productionOrders = () => {
                             <td>{order.product.code}</td>
                             <td>{order.size.name}</td>
                             <td>{order.quantity}</td>
-                            <td>-</td>
+                            <td>{order.quantity}</td>
                             <td>{order.line.name}</td>
                             <td>
                               <div className="progress" style={{ height: '7px' }}>
@@ -675,7 +690,7 @@ const productionOrders = () => {
                             <td>{order.end ? order.end : "-"}</td>
                             <td>
                               <div className="d-flex gap-2 actions-btns">
-                                <span className="feather icon-trash-2 delete" onClick={handleDeleteShow}></span>
+                              <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(order) }}></span>
                               </div>
                             </td>
                           </tr>
