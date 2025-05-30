@@ -144,32 +144,47 @@ const productionOrders = () => {
     }
   };
 
-  const getCountStatusInterval = async () => {
-    try {
-      const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`);
-
-      setCounter(response.data.status.length);
-      setCounterStatus(response.data.current)
-      setCounterPrevStatus(response.data.before)
-      
-
-      let data = {
+  const getCountStatusInterval = async (order) => {
+    if (counter <= order.quantity) {
+      axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
-        status: "finished",
-        start: formatDate(selectedOrderStartDate),
-        end: formatDate(new Date()),
+        produced: counter,
+        end: new Date(),
+      }, config)
+        .then((res) => {
+          getProductsOrdersList()
+        })
+        .catch((error) => {
+          // handleUpdateError()
+        });
+      updateCountStatus('stop', order.id)
+    } else {
+
+      try {
+        const response = await axios.get(`https://spartanapi.ngrok.app/line-1/status`);
+        setCounter(response.data.status.length);
+        setCounterStatus(response.data.current)
+        setCounterPrevStatus(response.data.before)
+
+
+        let data = {
+          _method: "put",
+          status: "finished",
+          start: formatDate(selectedOrderStartDate),
+          end: formatDate(new Date()),
+        }
+        if (response.data.status.length >= selectedOrderQty) {
+          axios.post(`${BASE_URL}productions/${selectedOrderID}`, data, config)
+            .then(() => {
+              window.location.reload();
+            })
+            .catch((error) => {
+              // handleUpdateError()
+            });
+        }
+      } catch (error) {
+        // handleError()
       }
-      if (response.data.status.length >= selectedOrderQty) {
-        axios.post(`${BASE_URL}productions/${selectedOrderID}`, data, config)
-          .then(() => {
-            window.location.reload();
-          })
-          .catch((error) => {
-            // handleUpdateError()
-          });
-      }
-    } catch (error) {
-      // handleError()
     }
   };
 
@@ -350,7 +365,7 @@ const productionOrders = () => {
 
     if (status === "pause" || status === "play") {
       if (!intervalId) {
-        const id = setInterval(getCountStatusInterval, 10000); // 30000 ms = 30 Seconds
+        const id = setInterval(() => getCountStatusInterval(order), 10000); // 30000 ms = 30 Seconds
         setIntervalId(id);
       }
     } else if (status === "stop") {
@@ -690,7 +705,7 @@ const productionOrders = () => {
                             <td>{order.end ? order.end : "-"}</td>
                             <td>
                               <div className="d-flex gap-2 actions-btns">
-                              <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(order) }}></span>
+                                <span className="feather icon-trash-2 delete" onClick={() => { handleDeleteShow(); setSelectedOrder(order) }}></span>
                               </div>
                             </td>
                           </tr>
