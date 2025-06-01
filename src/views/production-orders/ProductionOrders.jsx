@@ -329,12 +329,12 @@ const productionOrders = () => {
   }
 
   const updateCountStatus = async (status, id, restart) => {
-    if(restart) {
-      window.location.reload();
-    }
     try {
       const response = await axios.post(`https://spartanapi.ngrok.app/line-1/${status}`);
       setCounter(response.data.status.length);
+      if(restart) {
+        window.location.reload();
+      }
     } catch (error) {
       // handleError()
     }
