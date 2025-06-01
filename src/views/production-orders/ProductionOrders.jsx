@@ -148,7 +148,7 @@ const productionOrders = () => {
     console.log(counter);
     console.log(order);
     
-    if (counter <= order.quantity) {
+    if (counter >= order.quantity) {
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
         produced: counter,
@@ -162,7 +162,7 @@ const productionOrders = () => {
         });
         console.log("============== greater than or equal");
         
-      // handleCounter(null,'stop', order, true)
+      handleCounter(null,'stop', order, true)
     } else {
 
       try {
@@ -190,6 +190,9 @@ const productionOrders = () => {
       } catch (error) {
         // handleError()
       }
+      setTimeout(() => {
+        handleCounter(null,'stop', order, true)
+      }, 10000);
     }
   };
 
