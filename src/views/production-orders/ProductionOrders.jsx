@@ -160,6 +160,8 @@ const productionOrders = () => {
         .catch((error) => {
           // handleUpdateError()
         });
+        console.log("============== greater than or equal");
+        
       // handleCounter(null,'stop', order, true)
     } else {
 
