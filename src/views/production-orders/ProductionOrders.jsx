@@ -157,7 +157,7 @@ const productionOrders = () => {
         .catch((error) => {
           // handleUpdateError()
         });
-      updateCountStatus('stop', order.id, true)
+      updateCountStatus(null, 'stop', order.id, true)
     } else {
 
       try {
