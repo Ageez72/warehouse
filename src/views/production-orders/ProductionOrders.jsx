@@ -147,7 +147,7 @@ const productionOrders = () => {
   const getCountStatusInterval = async (order) => {
     console.log(counter);
     console.log(order);
-    
+
     if (counter >= order.quantity) {
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
@@ -160,9 +160,7 @@ const productionOrders = () => {
         .catch((error) => {
           // handleUpdateError()
         });
-        console.log("============== greater than or equal");
-        
-      handleCounter(null,'stop', order, true)
+      handleCounter(null, 'stop', order, true)
     } else {
 
       try {
@@ -190,9 +188,6 @@ const productionOrders = () => {
       } catch (error) {
         // handleError()
       }
-      setTimeout(() => {
-        handleCounter(null,'stop', order, true)
-      }, 10000);
     }
   };
 
@@ -362,7 +357,7 @@ const productionOrders = () => {
     // }
 
     console.log(status);
-    
+
 
     if (status === 'play') {
       playBtn.classList.add("disabled")
