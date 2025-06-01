@@ -157,7 +157,7 @@ const productionOrders = () => {
         .catch((error) => {
           // handleUpdateError()
         });
-      updateCountStatus(null, 'stop', order.id, true)
+      handleCounter(null,'stop', order, true)
     } else {
 
       try {
@@ -328,13 +328,11 @@ const productionOrders = () => {
     }
   }
 
-  const updateCountStatus = async (status, id, restart) => {
+  const updateCountStatus = async (status, id) => {
     try {
       const response = await axios.post(`https://spartanapi.ngrok.app/line-1/${status}`);
       setCounter(response.data.status.length);
-      if(restart) {
-        window.location.reload();
-      }
+
     } catch (error) {
       // handleError()
     }
