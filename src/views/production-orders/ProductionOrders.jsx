@@ -145,6 +145,9 @@ const productionOrders = () => {
   };
 
   const getCountStatusInterval = async (order) => {
+    console.log(counter);
+    console.log(order);
+    
     if (counter <= order.quantity) {
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
@@ -157,7 +160,7 @@ const productionOrders = () => {
         .catch((error) => {
           // handleUpdateError()
         });
-      handleCounter(null,'stop', order, true)
+      // handleCounter(null,'stop', order, true)
     } else {
 
       try {
@@ -352,6 +355,9 @@ const productionOrders = () => {
     //   pauseBtn.classList.remove("active");
     //   parent.classList.remove("playing")
     // }
+
+    console.log(status);
+    
 
     if (status === 'play') {
       playBtn.classList.add("disabled")
