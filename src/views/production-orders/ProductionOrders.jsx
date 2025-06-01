@@ -145,9 +145,6 @@ const productionOrders = () => {
   };
 
   const getCountStatusInterval = async (order) => {
-    console.log(counter);
-    console.log(order);
-
     if (counter >= order.quantity) {
       axios.post(`${BASE_URL}productions/${order.id}`, {
         _method: "put",
